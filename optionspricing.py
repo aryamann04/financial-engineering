@@ -1,10 +1,12 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import math
+
 from scipy.stats import norm
 from scipy.optimize import brentq
+
 from datetime import datetime, timedelta
-import math
 from tabulate import tabulate
 
 def stock_data(ticker):
@@ -63,8 +65,7 @@ def bs_price(S, K, T, r, sigma, q, option_type="call"):
 def actual_option_price(tic, K, T, option_type):
     ticker = yf.Ticker(tic)
     exp_dates = ticker.options
-    today = datetime.now()
-    target_expiry = today + timedelta(days=T * 365)
+    target_expiry = datetime.now() + timedelta(days=T * 365)
     closest_expiry = min(exp_dates, key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_expiry))
 
     option_chain = ticker.option_chain(closest_expiry)
@@ -90,37 +91,41 @@ def print_option_price(ticker, r, T, K, n, option_type="call"):
     S_0, sigma = stock_data(ticker)
     q = div_yield(ticker)
 
+    print("\n********** PARAMETERS **********\n")
     params_table = [
         ["Ticker", ticker],
-        ["Risk-Free Rate", r],
-        ["Dividend Yield", q],
+        ["Risk-Free Rate", f"{r*100:.2f}%"],
+        ["Dividend Yield", f"{q*100:.2f}%"],
         ["Time to Expiry (years)", T],
         ["Strike Price", K],
         ["Number of Periods (Binomial Model)", n],
         ["Option Type", option_type]
     ]
     print(tabulate(params_table, headers=["Parameter", "Value"], tablefmt="grid"))
+
     print("\n********** PRICES **********\n")
-
     european_price = binom_price(S_0, K, T, r, sigma, q, n, option_type=option_type, american=False)
-    print(f"European {option_type} price (binomial model with {n} periods): {european_price:.2f}")
-
     american_price = binom_price(S_0, K, T, r, sigma, q, n, option_type=option_type, american=True)
-    print(f"American {option_type} price (binomial model with {n} periods): {american_price:.2f}\n")
-
     black_scholes_price = bs_price(S_0, K, T, r, sigma, q, option_type=option_type)
-    print(f"Black-Scholes European {option_type} price: {black_scholes_price:.2f}")
+    actual_price, exp = actual_option_price(ticker, K, T, option_type)
+    target_exp = (datetime.now() + timedelta(days=T * 365)).strftime('%Y-%m-%d')
 
-    actual, exp = actual_option_price(ticker, K, T, option_type)
-    if actual:
-        print(f"Actual {option_type} price (expiring on {exp}): {actual}\n")
-    else:
-        print(f"Actual {option_type} price not found for strike price {K} expiring on {exp}\n")
+    price_table = [
+        ["Binomial", f"European {option_type}", target_exp, f"${round(european_price, 2)}"],
+        ["Binomial", f"American {option_type}", target_exp, f"${round(american_price, 2)}"],
+        ["Black-Scholes", f"European {option_type}", target_exp, f"${round(black_scholes_price, 2)}"],
+        ["Actual Market", f"European {option_type}", exp, f"${actual_price}"]
+    ]
+    print(tabulate(price_table, headers=["Model", "Option Type", "Expiry", "Price"], tablefmt="grid"))
 
-    print("********** VOLATILITY **********\n")
-    print(f"Historical volatility (1yr std dev): {sigma:.5f}")
-    if actual:
-        iv = implied_volatility(actual, S_0, K, T, r, q, option_type)
-        print(f"Implied volatility: {iv:.5f}")
+    print("\n********** VOLATILITY **********\n")
+    if actual_price:
+        iv = implied_volatility(actual_price, S_0, K, T, r, q, option_type)
     else:
-        print("Implied volatility: N/A")
+        iv = np.nan
+
+    vol_table = [
+        ["Historical", "1 year std dev", f"{sigma*100:.2f}%"],
+        ["Implied", "Black-Scholes", f"{iv*100:.2f}%"]
+    ]
+    print(tabulate(vol_table, headers=["Volatility Type", "Method", "Value"], tablefmt="grid"))
