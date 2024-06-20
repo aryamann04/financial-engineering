@@ -1,6 +1,5 @@
 from option import create_option
 
-#---------[parameters]---------#
 ticker = "PG"
 r = 0.0509 # risk-free rate (annual)
 T = 1.5  # years
