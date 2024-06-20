@@ -4,7 +4,7 @@ from option import create_option
 ticker = "PG"
 r = 0.0509 # risk-free rate (annual)
 T = 1.5  # years
-K = 200
+K = 200 # strike 
 n = 10 # number of periods in the binomial model
 option_type = "call" # "call" or "put"
 
