@@ -78,8 +78,8 @@ def actual_option_price(tic, K, T, option_type):
         return None
     else:
         return option_row['lastPrice'].values[0], closest_expiry
-    
-def option(ticker, r, T, K, n, option_type="call"):
+
+def print_option_price(ticker, r, T, K, n, option_type="call"):
     S_0, sigma = stock_data(ticker)
 
     european_price = binom_price(S_0, K, T, r, sigma, n, option_type=option_type, american=False)
