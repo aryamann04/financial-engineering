@@ -1,4 +1,4 @@
-from optionspricing import option
+from optionspricing import print_option_price
 
 #---------[parameters]---------#
 ticker = "AAPL"
@@ -8,4 +8,4 @@ K = 150
 n = 100 # number of periods in the binomial model
 option_type = "call" # "call" or "put"
 
-option(ticker, r, T, K, n, option_type)
+print_option_price(ticker, r, T, K, n, option_type)
