@@ -1,11 +1,12 @@
-from optionspricing import print_option_price
+from option import create_option
 
 #---------[parameters]---------#
-ticker = "AAPL"
-r = 0.05 # risk-free annual rate
-T = 1  # years
-K = 150
-n = 100 # number of periods in the binomial model
+ticker = "PG"
+r = 0.0509 # risk-free rate (annual)
+T = 1.5  # years
+K = 200
+n = 10 # number of periods in the binomial model
 option_type = "call" # "call" or "put"
 
-print_option_price(ticker, r, T, K, n, option_type)
+PnG_call_200 = create_option(ticker, r, T, K, n, option_type)
+PnG_call_200.summary()
