@@ -3,9 +3,8 @@ from optionspricing import stock_data
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class OptionStrategy:
-    def __init__(self, ticker, percent_otm_itm, expiry_date, rf, n):
+    def __init__(self, ticker, percent_otm_itm, expiry_date, rf, n=100):
         self.ticker = ticker
         self.stock_price, self.sigma = stock_data(ticker)
         self.percent_otm_itm = percent_otm_itm
@@ -15,13 +14,13 @@ class OptionStrategy:
         self.options = []
         self.strategy_name = ""
         self.total_price = 0
+        self.total_market_price = 0
 
     def create_option(self, option_type, strike_price, position='long'):
         option = create_option(self.ticker, self.rf, self.expiry_date, strike_price, self.n, option_type, position)
         itm_otm = ""
         percent_itm_otm = abs((strike_price - self.stock_price) / self.stock_price)
 
-        # Determine if the option is ITM, OTM, or ATM
         if option_type == "call":
             if strike_price < self.stock_price:
                 itm_otm = "ITM"
@@ -49,23 +48,31 @@ class OptionStrategy:
         # Print option details
         print(f"Option Type: {option_type.capitalize()}")
         print(f"Position: {position.capitalize()}")
-        print(f"Strike Price: {strike_price:.3f}")
-        print(f"Black-Scholes Price: {option.price:.3f}")
 
-        if option.market is not None:
-            print(f"Market Price: {option.market}")
-        else:
-            print(f"Market Price: does not exist")
+        if option_type != 'stock':
+            print(f"Strike Price: {strike_price:.3f}")
+            print(f"Black-Scholes Price: {option.price:.3f}")
 
-        print(f"ITM/OTM: {itm_otm}")
-        print(f"Percent ITM/OTM: {percent_itm_otm:.3f}")
+            if option.market is not None:
+                print(f"Market Price: {option.market}")
+            else:
+                print(f"Market Price: does not exist")
+
+            print(f"Moneyness: {itm_otm}")
+            print(f"Percent ITM/OTM: {percent_itm_otm:.3f}")
+
+            option.summary()
+
         print()
 
         return option
 
     def calculate_strategy_price(self):
         self.total_price = sum(option.price if option.position == 'long' else -option.price for option in self.options)
-        print(f'Total price of the {self.strategy_name} strategy: {self.total_price:.3f}')
+        self.total_market_price = sum(option.market if option.position == 'long' else -option.market for option in self.options)
+
+        print(f'Total price (Black-Scholes) of the {self.strategy_name} strategy: ${self.total_price:.2f}')
+        print(f'Total market price of the {self.strategy_name} strategy: ${self.total_market_price:.2f}')
 
     def visualize_payoff(self):
         stock_prices = np.linspace(self.stock_price * 0.5, self.stock_price * 1.5, 100)
@@ -105,7 +112,7 @@ class OptionStrategy:
         print(f"Break-even points: {', '.join([f'{point:.3f}' for point in break_even_points])}\n")
 
     def covered_call(self):
-        self.options = []  # Clear previous options
+        self.options = []
         call = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'short')
         stock = self.create_option('stock', self.stock_price, 'long')
 
@@ -115,8 +122,10 @@ class OptionStrategy:
         self.calculate_strategy_price()
         self.visualize_payoff()
 
+        return self.options
+
     def married_put(self):
-        self.options = []  # Clear previous options
+        self.options = []
         put = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'long')
         stock = self.create_option('stock', self.stock_price, 'long')
 
@@ -126,8 +135,10 @@ class OptionStrategy:
         self.calculate_strategy_price()
         self.visualize_payoff()
 
+        return self.options
+
     def bull_call_spread(self):
-        self.options = []  # Clear previous options
+        self.options = []
         call1 = self.create_option('call', self.stock_price * (1 - self.percent_otm_itm), 'long')
         call2 = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'short')
 
@@ -137,8 +148,10 @@ class OptionStrategy:
         self.calculate_strategy_price()
         self.visualize_payoff()
 
+        return self.options
+
     def bear_put_spread(self):
-        self.options = []  # Clear previous options
+        self.options = []
         put1 = self.create_option('put', self.stock_price * (1 + self.percent_otm_itm), 'long')
         put2 = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'short')
 
@@ -148,8 +161,10 @@ class OptionStrategy:
         self.calculate_strategy_price()
         self.visualize_payoff()
 
+        return self.options
+
     def protective_collar(self):
-        self.options = []  # Clear previous options
+        self.options = []
         put = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'long')
         call = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'short')
         stock = self.create_option('stock', self.stock_price, 'long')
@@ -161,8 +176,10 @@ class OptionStrategy:
         self.calculate_strategy_price()
         self.visualize_payoff()
 
+        return self.options
+
     def long_straddle(self):
-        self.options = []  # Clear previous options
+        self.options = []
         call = self.create_option('call', self.stock_price, 'long')
         put = self.create_option('put', self.stock_price, 'long')
 
@@ -172,8 +189,10 @@ class OptionStrategy:
         self.calculate_strategy_price()
         self.visualize_payoff()
 
+        return self.options
+
     def long_strangle(self):
-        self.options = []  # Clear previous options
+        self.options = []
         call = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'long')
         put = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'long')
 
@@ -183,8 +202,10 @@ class OptionStrategy:
         self.calculate_strategy_price()
         self.visualize_payoff()
 
+        return self.options
+
     def long_call_butterfly_spread(self):
-        self.options = []  # Clear previous options
+        self.options = []
         call1 = self.create_option('call', self.stock_price * (1 - self.percent_otm_itm), 'long')
         call2a = self.create_option('call', self.stock_price, 'short')
         call2b = self.create_option('call', self.stock_price, 'short')
@@ -198,8 +219,10 @@ class OptionStrategy:
         self.calculate_strategy_price()
         self.visualize_payoff()
 
+        return self.options
+
     def long_put_butterfly_spread(self):
-        self.options = []  # Clear previous options
+        self.options = []
         put1 = self.create_option('put', self.stock_price * (1 + self.percent_otm_itm), 'long')
         put2a = self.create_option('put', self.stock_price, 'short')
         put2b = self.create_option('put', self.stock_price, 'short')
@@ -213,7 +236,4 @@ class OptionStrategy:
         self.calculate_strategy_price()
         self.visualize_payoff()
 
-
-# Example usage
-strat = OptionStrategy("AAPL", 0.05, 1, 0.05, 100)
-strat.long_call_butterfly_spread()
+        return self.options
