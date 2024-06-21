@@ -10,7 +10,11 @@ percent_itm_otm = 0.1 # for option strategies (0, 1)
 
 # create a strategy object and call the relevant strategy function
 AAPL_strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
-AAPL_strategy.covered_call()
+AAPL_strategy.long_strangle()
+
+AAPL_strategy.strategy_price() # print Black-Scholes and market price
+AAPL_strategy.greeks() # print strategy greeks
+AAPL_strategy.visualize_payoff() # view payoff graph and break-even points
 
 '''
 available option strategies: 
