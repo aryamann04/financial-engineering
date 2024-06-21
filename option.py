@@ -9,13 +9,16 @@ from optionspricing import (stock_data,
                             print_option_price)
 
 class Option:
-    def __init__(self, ticker, r, T, K, n, option_type="call"):
+    def __init__(self, ticker, r, T, K, n, option_type="call", position="long"):
+
         self.ticker = ticker
         self.r = r
         self.T = T
         self.K = K
         self.n = n
         self.option_type = option_type
+        self.position = position
+
         self.S_0, self.sigma = stock_data(ticker)
         self.q = div_yield(ticker)
         self.price = bs_price(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
@@ -92,5 +95,5 @@ class Option:
     def summary(self):
         print_option_price(self.ticker, self.r, self.T, self.K, self.n, self.option_type)
 
-def create_option(ticker, r, T, K, n, option_type="call"):
-    return Option(ticker, r, T, K, n, option_type)
+def create_option(ticker, r, T, K, n, option_type="call", position="long"):
+    return Option(ticker, r, T, K, n, option_type, position)
