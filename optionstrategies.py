@@ -2,6 +2,7 @@ from option import create_option
 from optionspricing import stock_data
 import numpy as np
 import matplotlib.pyplot as plt
+from tabulate import tabulate
 
 class OptionStrategy:
     def __init__(self, ticker, percent_otm_itm, expiry_date, rf, n=100):
@@ -67,15 +68,62 @@ class OptionStrategy:
 
         return option
 
-    def calculate_strategy_price(self):
+    def strategy_price(self):
+        print(f"\n********** STRATEGY **********")
+        print(f"{self.ticker} {self.percent_otm_itm*100}% {self.strategy_name}")
+        print(f"******************************\n")
         self.total_price = sum(option.price if option.position == 'long' else -option.price for option in self.options)
         self.total_market_price = sum(option.market if option.position == 'long' else -option.market for option in self.options)
 
-        print(f'Total price (Black-Scholes) of the {self.strategy_name} strategy: ${self.total_price:.2f}')
-        print(f'Total market price of the {self.strategy_name} strategy: ${self.total_market_price:.2f}')
+        print(f"\n********** STRATEGY PRICE **********\n")
+        price_table = [
+            ["Black-Scholes", f"${self.total_price:.2f}"],
+            ["Market", f"${self.total_market_price:.2f}"],
+        ]
+        print(tabulate(price_table, headers=["Type", "Price"], tablefmt="grid"))
+        return self.total_price, self.total_market_price
+
+    def greeks(self):
+        delta = 0
+        gamma = 0
+        theta = 0
+        vega = 0
+        rho = 0
+
+        for option in self.options:
+            if option.option_type != 'stock':
+                if option.position == 'long':
+                    delta += option.delta
+                    gamma += option.gamma
+                    theta += option.theta
+                    vega += option.vega
+                    rho += option.rho
+                else:  # short position
+                    delta -= option.delta
+                    gamma -= option.gamma
+                    theta -= option.theta
+                    vega -= option.vega
+                    rho -= option.rho
+            else:  # for stock
+                if option.position == 'long':
+                    delta += 1
+                else:  # short stock position
+                    delta -= 1
+
+        print(f"\n********** STRATEGY GREEKS **********\n")
+        greeks_table = [
+            ["Delta", f"{delta:.4f}"],
+            ["Gamma", f"{gamma:.4f}"],
+            ["Theta", f"{theta:.4f}"],
+            ["Vega", f"{vega:.4f}"],
+            ["Rho", f"{rho:.4f}"]
+        ]
+        print(tabulate(greeks_table, headers=["Greek", "Value"], tablefmt="grid"))
+
+        return {"Delta": delta, "Gamma": gamma, "Theta": theta, "Vega": vega, "Rho": rho}
 
     def visualize_payoff(self):
-        stock_prices = np.linspace(self.stock_price * 0.5, self.stock_price * 1.5, 100)
+        stock_prices = np.linspace(self.stock_price * 0.5, self.stock_price * 1.5, 1000)
         total_payoff = np.zeros_like(stock_prices)
 
         for option in self.options:
@@ -98,18 +146,21 @@ class OptionStrategy:
         plt.axhline(0, color='black', linestyle='--', linewidth=0.5)
 
         break_even_points = stock_prices[np.isclose(total_profit_loss, 0, atol=0.1)]
-        for point in break_even_points:
-            plt.axvline(point, color='red', linestyle='--', linewidth=0.5)
-            plt.text(point, 0, f'{point:.2f}', verticalalignment='bottom')
+        break_even_points = np.unique(np.round(break_even_points, 2))
+
+        if len(break_even_points) == 0:
+            print("\nBreak-even points: N/A\n")
+        else:
+            print(f"\nBreak-even points: {', '.join([f'{point:.2f}' for point in break_even_points])}\n")
+            for point in break_even_points:
+                plt.axvline(point, color='red', linestyle='--', linewidth=0.5)
+                plt.text(point, 0, f'{point:.2f}', verticalalignment='bottom')
 
         plt.xlabel('Stock Price')
         plt.ylabel('Profit/Loss')
-        plt.title(f'{self.strategy_name} Profit/Loss Diagram')
+        plt.title(f'{self.ticker} {self.percent_otm_itm*100}% {self.strategy_name} Profit/Loss Diagram')
         plt.legend()
         plt.show()
-
-        # Print break-even points
-        print(f"Break-even points: {', '.join([f'{point:.3f}' for point in break_even_points])}\n")
 
     def covered_call(self):
         self.options = []
@@ -119,8 +170,6 @@ class OptionStrategy:
         self.options.append(call)
         self.options.append(stock)
         self.strategy_name = "Covered Call"
-        self.calculate_strategy_price()
-        self.visualize_payoff()
 
         return self.options
 
@@ -132,8 +181,6 @@ class OptionStrategy:
         self.options.append(put)
         self.options.append(stock)
         self.strategy_name = "Married Put"
-        self.calculate_strategy_price()
-        self.visualize_payoff()
 
         return self.options
 
@@ -145,8 +192,6 @@ class OptionStrategy:
         self.options.append(call1)
         self.options.append(call2)
         self.strategy_name = "Bull Call Spread"
-        self.calculate_strategy_price()
-        self.visualize_payoff()
 
         return self.options
 
@@ -158,8 +203,6 @@ class OptionStrategy:
         self.options.append(put1)
         self.options.append(put2)
         self.strategy_name = "Bear Put Spread"
-        self.calculate_strategy_price()
-        self.visualize_payoff()
 
         return self.options
 
@@ -173,8 +216,6 @@ class OptionStrategy:
         self.options.append(call)
         self.options.append(stock)
         self.strategy_name = "Protective Collar"
-        self.calculate_strategy_price()
-        self.visualize_payoff()
 
         return self.options
 
@@ -186,8 +227,6 @@ class OptionStrategy:
         self.options.append(call)
         self.options.append(put)
         self.strategy_name = "Long Straddle"
-        self.calculate_strategy_price()
-        self.visualize_payoff()
 
         return self.options
 
@@ -199,8 +238,6 @@ class OptionStrategy:
         self.options.append(call)
         self.options.append(put)
         self.strategy_name = "Long Strangle"
-        self.calculate_strategy_price()
-        self.visualize_payoff()
 
         return self.options
 
@@ -216,8 +253,6 @@ class OptionStrategy:
         self.options.append(call2b)
         self.options.append(call3)
         self.strategy_name = "Long Call Butterfly Spread"
-        self.calculate_strategy_price()
-        self.visualize_payoff()
 
         return self.options
 
@@ -233,7 +268,5 @@ class OptionStrategy:
         self.options.append(put2b)
         self.options.append(put3)
         self.strategy_name = "Long Put Butterfly Spread"
-        self.calculate_strategy_price()
-        self.visualize_payoff()
 
         return self.options
