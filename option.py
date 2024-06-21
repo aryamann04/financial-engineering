@@ -1,5 +1,6 @@
 from scipy.stats import norm
 import numpy as np
+from tabulate import tabulate
 from optionspricing import (stock_data,
                             div_yield,
                             bs_price,
@@ -94,6 +95,15 @@ class Option:
     # print summary
     def summary(self):
         print_option_price(self.ticker, self.r, self.T, self.K, self.n, self.option_type)
+        print("\n********** GREEKS **********\n")
+        greeks_table = [
+            ["Delta", f"{self.delta:.4f}"],
+            ["Gamma", f"{self.gamma:.4f}"],
+            ["Theta", f"{self.theta:.4f}"],
+            ["Vega", f"{self.vega:.4f}"],
+            ["Rho", f"{self.rho:.4f}"]
+        ]
+        print(tabulate(greeks_table, headers=["Greek", "Value"], tablefmt="grid"))
 
 def create_option(ticker, r, T, K, n, option_type="call", position="long"):
     return Option(ticker, r, T, K, n, option_type, position)
