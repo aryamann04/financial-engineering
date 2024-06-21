@@ -1,11 +1,26 @@
-from option import create_option
+from optionstrategies import OptionStrategy
 
-ticker = "PG"
-r = 0.0509 # risk-free rate (annual)
+#-----------------------------------------------------------#
+ticker = "AAPL"
+r = 0.05 # risk-free rate (annual)
 T = 1.5  # years
-K = 200 # strike 
 n = 10 # number of periods in the binomial model
-option_type = "call" # "call" or "put"
+percent_itm_otm = 0.1 # for option strategies (0, 1)
+#-----------------------------------------------------------#
 
-PnG_call_200 = create_option(ticker, r, T, K, n, option_type)
-PnG_call_200.summary()
+# create a strategy object and call the relevant strategy function
+AAPL_strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
+AAPL_strategy.covered_call()
+
+'''
+available option strategies: 
+1.  covered_call()
+2.  married_put()
+3.  bull_call_spread()
+4.  bear_put_spread()
+5.  protective_collar()
+6.  long_straddle()
+7.  long_strangle()
+8.  long_call_butterfly_spread()
+9.  long_put_butterfly_spread()
+'''
