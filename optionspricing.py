@@ -92,7 +92,6 @@ def print_option_price(ticker, r, T, K, n, option_type="call"):
     S_0, sigma = stock_data(ticker)
     q = div_yield(ticker)
 
-    print("\n********** PARAMETERS **********\n")
     params_table = [
         ["Ticker", ticker],
         ["Risk-Free Rate", f"{r*100:.2f}%"],
