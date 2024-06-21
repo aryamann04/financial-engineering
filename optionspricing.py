@@ -64,6 +64,7 @@ def bs_price(S, K, T, r, sigma, q, option_type="call"):
 
 def actual_option_price(tic, K, T, option_type):
     ticker = yf.Ticker(tic)
+    K = 5 * round(K/5) # round strike to nearest 5 for finding market prices
     exp_dates = ticker.options
     target_expiry = datetime.now() + timedelta(days=T * 365)
     closest_expiry = min(exp_dates, key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_expiry))
