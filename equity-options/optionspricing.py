@@ -9,12 +9,22 @@ from scipy.optimize import brentq
 from datetime import datetime, timedelta
 from tabulate import tabulate
 
-def stock_data(ticker):
+def stock_data(ticker, date=None):
     stock = yf.Ticker(ticker)
-    hist = stock.history(period="1y")
+
+    if date is not None:
+        date = pd.to_datetime(date)
+        start_date = date - pd.Timedelta(days=365)
+        hist = stock.history(start=start_date, end=date)
+    else:
+        hist = stock.history(period="1y")
+
+    if hist.empty:
+        raise ValueError(f"No data available for {ticker} on {date.strftime('%Y-%m-%d')}.")
     current_price = hist['Close'].iloc[-1]
+
     log_returns = np.log(hist['Close'] / hist['Close'].shift(1))
-    volatility = np.std(log_returns) * np.sqrt(252)  # annualized
+    volatility = np.std(log_returns) * np.sqrt(252)  # annualized volatility
 
     return current_price, volatility
 
@@ -88,8 +98,8 @@ def implied_volatility(option_price, S, K, T, r, q, option_type):
     except ValueError:
         return np.nan
 
-def print_option_price(ticker, r, T, K, n, option_type="call"):
-    S_0, sigma = stock_data(ticker)
+def print_option_price(ticker, r, T, K, n, option_type="call", creation_date=None):
+    S_0, sigma = stock_data(ticker, creation_date)
     q = div_yield(ticker)
 
     params_table = [
@@ -107,7 +117,13 @@ def print_option_price(ticker, r, T, K, n, option_type="call"):
     european_price = binom_price(S_0, K, T, r, sigma, q, n, option_type=option_type, american=False)
     american_price = binom_price(S_0, K, T, r, sigma, q, n, option_type=option_type, american=True)
     black_scholes_price = bs_price(S_0, K, T, r, sigma, q, option_type=option_type)
-    actual_price, exp = actual_option_price(ticker, K, T, option_type)
+
+    if creation_date is None:
+        actual_price, exp = actual_option_price(ticker, K, T, option_type)
+    else:
+        actual_price = None
+        exp = "N/A"
+
     target_exp = (datetime.now() + timedelta(days=T * 365)).strftime('%Y-%m-%d')
 
     price_table = [
