@@ -1,7 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
+from datetime import datetime
 
-# get current treasury yields from CNBC
+# Get current treasury yields from CNBC
 def treasury_yield(t):
     url = get_url(t)
     headers = {
@@ -15,7 +18,7 @@ def treasury_yield(t):
         yield_element = container.find('span', class_='QuoteStrip-lastPrice')
         if yield_element:
             yield_value = yield_element.text.strip()
-            return float(yield_value.replace('%', ''))/100
+            return float(yield_value.replace('%', '')) / 100
         else:
             print("Yield span not found.")
             return None
@@ -41,3 +44,31 @@ def get_url(t):
     }
     closest = min(times.keys(), key=lambda k: abs(times[k] - t))
     return 'https://www.cnbc.com/quotes/US' + closest
+
+# Method to plot the current yield curve
+def plot_yield_curve():
+    maturities = ['1M', '2M', '3M', '4M', '6M', '1Y', '2Y', '3Y', '5Y', '7Y', '10Y', '20Y', '30Y']
+    times = [1 / 12, 2 / 12, 3 / 12, 4 / 12, 6 / 12, 1, 2, 3, 5, 7, 10, 20, 30]
+    yields = []
+
+    for maturity in maturities:
+        yield_value = treasury_yield(times[maturities.index(maturity)])
+        if yield_value is not None:
+            yields.append(yield_value)
+        else:
+            yields.append(0)  # Append 0 if the yield is not found
+
+    # Get today's date
+    today = datetime.today().strftime('%Y-%m-%d')
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(maturities, yields, marker='o')
+    plt.title(f'Current Treasury Yield Curve as of {today}')
+    plt.xlabel('Maturity')
+    plt.ylabel('Yield')
+
+    # Format y-axis as percentage
+    plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2%}'))
+
+    plt.grid(True)
+    plt.show()
