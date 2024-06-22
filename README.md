@@ -60,5 +60,49 @@ strategy.visualize_payoff()  # view payoff graph and break-even points
 - ```optionspricing.py``` Prices options with the binomial model as well as the Black Scholes model. Given a ticker, the current stock price and dividend yield are retreived via the yfinance library. The user enters the strike price, time to expiry, and option type ("call" or "put") as well as the number of periods for the binomial model. The volatility parameter is proxied by a 1 year historical volatility (standard deviation) of the stock's price. The program outputs the price calcualed by the bimonial model (both European and American), the Black-Scholes price, the current actual market price of the option, and the implied volatility. 
 
 ### Fixed Income
-- ```bonds.py``` Calculate the price of a bond with or without coupons and calculate yield to maturity.
+- ```bonds.py``` The main classes include ZeroCouponBond, ZeroCouponBondOption, Caplet, and Floorlet. Each class offers methods to construct interest rate trees, calculate instrument prices using the binomial model, and print the trees for visualization.
+
+#### Zero Coupon Bonds and Options on ZCBs
+```python
+face_value = 100
+T = 4  # bond maturity in years
+r_0 = 0.06
+u = 1.25
+d = 0.9
+
+zcb_4y = ZeroCouponBond(face_value, T, r_0, u, d)
+zcb_4y.price()
+zcb_4y.print_bond_tree()
+zcb_4y.print_interest_tree()
+
+zcb_option_expiry = 2
+zcb_option_strike = 84
+
+zcb_4y_2yoption = ZeroCouponBondOption(zcb_4y, zcb_option_strike, zcb_option_expiry)
+zcb_4y_2yoption.price()
+zcb_4y_2yoption.print_option_tree()
+```
+
+#### Caplets and Floorlets
+```python
+cf_expiry = 6
+cf_notional = 1000  # notional amount in dollars
+caplet_strike = 0.02
+floorlet_strike = 0.08
+
+caplet_6y = Caplet(r_0, caplet_strike, cf_expiry, u, d, cf_notional)
+caplet_6y.price()
+caplet_6y.print_caplet_tree()
+caplet_6y.print_interest_tree()
+
+floorlet_6y = Floorlet(r_0, floorlet_strike, cf_expiry, u, d, cf_notional)
+floorlet_6y.price()
+floorlet_6y.print_floorlet_tree()
+floorlet_6y.print_interest_tree()
+```
+
+The following is an example of the binomial price tree output for the zero coupon bond. 
+
+<img width="480" alt="Screenshot 2024-06-23 at 1 55 48 AM" src="https://github.com/aryamann04/options/assets/140534650/178e6eea-5221-4a83-81c2-9251069961c9">
+
 - ```currentbonds.py``` Get live information on U.S. Treasury Yields (1, 2, 3, 4, 6 months; 1, 2, 3, 5, 7, 10, 20, 30 years) and plot the current yield curve with ```plot_yield_curve()```. 
