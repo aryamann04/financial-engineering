@@ -5,20 +5,22 @@ import matplotlib.pyplot as plt
 from tabulate import tabulate
 
 class OptionStrategy:
-    def __init__(self, ticker, percent_otm_itm, expiry_date, rf, n=100):
+    def __init__(self, ticker, percent_otm_itm, expiry_date, rf, n=100, creation_date=None):
         self.ticker = ticker
         self.stock_price, self.sigma = stock_data(ticker)
         self.percent_otm_itm = percent_otm_itm
         self.expiry_date = expiry_date
         self.rf = rf
         self.n = n
+        self.creation_date = creation_date
+
         self.options = []
         self.strategy_name = ""
         self.total_price = 0
         self.total_market_price = 0
 
     def create_option(self, option_type, strike_price, position='long'):
-        option = create_option(self.ticker, self.rf, self.expiry_date, strike_price, self.n, option_type, position)
+        option = create_option(self.ticker, self.rf, self.expiry_date, strike_price, self.n, option_type, position, creation_date=self.creation_date)
         itm_otm = ""
         percent_itm_otm = abs((strike_price - self.stock_price) / self.stock_price)
 
@@ -46,7 +48,6 @@ class OptionStrategy:
             itm_otm = "N/A"
             print(f"Created stock position at price {strike_price:.3f}")
 
-        # Print option details
         print(f"Option Type: {option_type.capitalize()}")
         print(f"Position: {position.capitalize()}")
 
@@ -60,7 +61,7 @@ class OptionStrategy:
                 print(f"Market Price: does not exist")
 
             print(f"Moneyness: {itm_otm}")
-            print(f"Percent ITM/OTM: {percent_itm_otm:.3f}")
+            print(f"Percent ITM/OTM: {percent_itm_otm*100:.2f}%")
 
             option.summary()
 
@@ -145,7 +146,15 @@ class OptionStrategy:
         plt.plot(stock_prices, total_profit_loss, label=f'{self.strategy_name} P/L')
         plt.axhline(0, color='black', linestyle='--', linewidth=0.5)
 
-        break_even_points = stock_prices[np.isclose(total_profit_loss, 0, atol=0.1)]
+        break_even_points = []
+        for i in range(1, len(stock_prices)):
+            if total_profit_loss[i - 1] * total_profit_loss[i] < 0:  # Check for sign change
+                # linear interpolation to find the exact break-even point
+                x1, x2 = stock_prices[i - 1], stock_prices[i]
+                y1, y2 = total_profit_loss[i - 1], total_profit_loss[i]
+                break_even_point = x1 - y1 * (x2 - x1) / (y2 - y1)
+                break_even_points.append(break_even_point)
+
         break_even_points = np.unique(np.round(break_even_points, 2))
 
         if len(break_even_points) == 0:
@@ -158,9 +167,105 @@ class OptionStrategy:
 
         plt.xlabel('Stock Price')
         plt.ylabel('Profit/Loss')
-        plt.title(f'{self.ticker} {self.percent_otm_itm*100}% {self.strategy_name} Profit/Loss Diagram')
+        plt.title(f'{self.ticker} {self.percent_otm_itm * 100}% {self.strategy_name} Profit/Loss Diagram')
         plt.legend()
         plt.show()
+
+    def atm_call(self):
+        self.options = []
+        call = self.create_option('call', self.stock_price, 'long')
+        self.options.append(call)
+        self.strategy_name = "ATM Call"
+
+        return self.options
+
+    def itm_call(self):
+        self.options = []
+        call = self.create_option('call', self.stock_price * (1 - self.percent_otm_itm), 'long')
+        self.options.append(call)
+        self.strategy_name = "ITM Call"
+
+        return self.options
+
+    def otm_call(self):
+        self.options = []
+        call = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'long')
+        self.options.append(call)
+        self.strategy_name = "OTM Call"
+
+        return self.options
+
+    def short_atm_call(self):
+        self.options = []
+        call = self.create_option('call', self.stock_price, 'short')
+        self.options.append(call)
+        self.strategy_name = "Short ATM Call"
+
+        return self.options
+
+    def short_itm_call(self):
+        self.options = []
+        call = self.create_option('call', self.stock_price * (1 - self.percent_otm_itm), 'short')
+        self.options.append(call)
+        self.strategy_name = "Short ITM Call"
+
+        return self.options
+
+    def short_otm_call(self):
+        self.options = []
+        call = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'short')
+        self.options.append(call)
+        self.strategy_name = "Short OTM Call"
+
+        return self.options
+
+    def atm_put(self):
+        self.options = []
+        put = self.create_option('put', self.stock_price, 'long')
+        self.options.append(put)
+        self.strategy_name = "ATM Put"
+
+        return self.options
+
+    def itm_put(self):
+        self.options = []
+        put = self.create_option('put', self.stock_price * (1 + self.percent_otm_itm), 'long')
+        self.options.append(put)
+        self.strategy_name = "ITM Put"
+
+        return self.options
+
+    def otm_put(self):
+        self.options = []
+        put = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'long')
+        self.options.append(put)
+        self.strategy_name = "OTM Put"
+
+        return self.options
+
+    def short_atm_put(self):
+        self.options = []
+        put = self.create_option('put', self.stock_price, 'short')
+        self.options.append(put)
+        self.strategy_name = "Short ATM Put"
+
+        return self.options
+
+    def short_itm_put(self):
+        self.options = []
+        put = self.create_option('put', self.stock_price * (1 + self.percent_otm_itm), 'short')
+        self.options.append(put)
+        self.strategy_name = "Short ITM Put"
+
+        return self.options
+
+    def short_otm_put(self):
+        self.options = []
+        put = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'short')
+        self.options.append(put)
+        self.strategy_name = "Short OTM Put"
+
+        return self.options
 
     def covered_call(self):
         self.options = []
@@ -206,6 +311,26 @@ class OptionStrategy:
 
         return self.options
 
+    def credit_call_spread(self):
+        self.options = []
+        call1 = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'long')
+        call2 = self.create_option('call', self.stock_price * (1 - self.percent_otm_itm), 'short')
+        self.options.append(call1)
+        self.options.append(call2)
+        self.strategy_name = "Credit Call Spread (Bearish)"
+
+        return self.options
+
+    def credit_put_spread(self):
+        self.options = []
+        put1 = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'long')
+        put2 = self.create_option('put', self.stock_price * (1 + self.percent_otm_itm), 'short')
+        self.options.append(put1)
+        self.options.append(put2)
+        self.strategy_name = "Credit Put Spread (Bullish)"
+
+        return self.options
+
     def protective_collar(self):
         self.options = []
         put = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'long')
@@ -241,6 +366,28 @@ class OptionStrategy:
 
         return self.options
 
+    def short_straddle(self):
+        self.options = []
+        call = self.create_option('call', self.stock_price, 'short')
+        put = self.create_option('put', self.stock_price, 'short')
+
+        self.options.append(call)
+        self.options.append(put)
+        self.strategy_name = "Short Straddle"
+
+        return self.options
+
+    def short_strangle(self):
+        self.options = []
+        call = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'short')
+        put = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'short')
+
+        self.options.append(call)
+        self.options.append(put)
+        self.strategy_name = "Short Strangle"
+
+        return self.options
+
     def long_call_butterfly_spread(self):
         self.options = []
         call1 = self.create_option('call', self.stock_price * (1 - self.percent_otm_itm), 'long')
@@ -256,17 +403,32 @@ class OptionStrategy:
 
         return self.options
 
-    def long_put_butterfly_spread(self):
+    def short_call_butterfly_spread(self):
         self.options = []
-        put1 = self.create_option('put', self.stock_price * (1 + self.percent_otm_itm), 'long')
-        put2a = self.create_option('put', self.stock_price, 'short')
-        put2b = self.create_option('put', self.stock_price, 'short')
-        put3 = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'long')
+        call1 = self.create_option('call', self.stock_price * (1 - self.percent_otm_itm), 'short')
+        call2a = self.create_option('call', self.stock_price, 'long')
+        call2b = self.create_option('call', self.stock_price, 'long')
+        call3 = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'short')
+
+        self.options.append(call1)
+        self.options.append(call2a)
+        self.options.append(call2b)
+        self.options.append(call3)
+        self.strategy_name = "Short Call Butterfly Spread"
+
+        return self.options
+
+    def iron_condor(self):
+        self.options = []
+        put1 = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm), 'long')
+        put2 = self.create_option('put', self.stock_price * (1 - self.percent_otm_itm / 2), 'short')
+        call1 = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm / 2), 'short')
+        call2 = self.create_option('call', self.stock_price * (1 + self.percent_otm_itm), 'long')
 
         self.options.append(put1)
-        self.options.append(put2a)
-        self.options.append(put2b)
-        self.options.append(put3)
-        self.strategy_name = "Long Put Butterfly Spread"
+        self.options.append(put2)
+        self.options.append(call1)
+        self.options.append(call2)
+        self.strategy_name = "Iron Condor"
 
         return self.options
