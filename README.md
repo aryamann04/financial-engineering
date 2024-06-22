@@ -61,4 +61,4 @@ strategy.visualize_payoff()  # view payoff graph and break-even points
 
 ### Fixed Income
 - ```bonds.py``` Calculate the price of a bond with or without coupons and calculate yield to maturity.
-- ```currentbonds.py``` Get live information on U.S. Treasury Yields (1, 2, 3, 4, 6 months; 1, 2, 3, 5, 7, 10, 20, 30 years)
+- ```currentbonds.py``` Get live information on U.S. Treasury Yields (1, 2, 3, 4, 6 months; 1, 2, 3, 5, 7, 10, 20, 30 years) and plot the current yield curve with ```plot_yield_curve()```. 
