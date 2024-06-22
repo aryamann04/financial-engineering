@@ -10,7 +10,7 @@ from optionspricing import (stock_data,
                             print_option_price)
 
 class Option:
-    def __init__(self, ticker, r, T, K, n, option_type="call", position="long"):
+    def __init__(self, ticker, r, T, K, n, option_type="call", position="long", creation_date=None):
 
         self.ticker = ticker
         self.r = r
@@ -20,7 +20,9 @@ class Option:
         self.option_type = option_type
         self.position = position
 
-        self.S_0, self.sigma = stock_data(ticker)
+        self.creation_date = creation_date
+        self.S_0, self.sigma = stock_data(ticker, creation_date)
+
         self.q = div_yield(ticker)
         self.price = bs_price(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
 
@@ -34,12 +36,17 @@ class Option:
 
     @property
     def market(self):
-        market, _ = actual_option_price(self.ticker, self.K, self.T, self.option_type)
-        return market
+        if self.creation_date is None:
+            market, _ = actual_option_price(self.ticker, self.K, self.T, self.option_type)
+            return market
+        else:
+            return np.nan  # historical options data unavailable
 
     @property
     def implied_volatility(self):
         actual_price, _ = self.actual
+        if self.creation_date is not None:
+            return np.nan  # historical options data unavailable
         if actual_price:
             return implied_volatility(actual_price, self.S_0, self.K, self.T, self.r, self.q, self.option_type)
         else:
@@ -105,5 +112,5 @@ class Option:
         ]
         print(tabulate(greeks_table, headers=["Greek", "Value"], tablefmt="grid"))
 
-def create_option(ticker, r, T, K, n, option_type="call", position="long"):
-    return Option(ticker, r, T, K, n, option_type, position)
+def create_option(ticker, r, T, K, n, option_type="call", position="long", creation_date=None):
+    return Option(ticker, r, T, K, n, option_type, position, creation_date)
