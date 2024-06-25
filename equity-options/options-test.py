@@ -21,7 +21,7 @@ strategy.greeks()  # print strategy greeks
 strategy.visualize_payoff(mp_payoff)  # view payoff graph and break-even points
 
 #-----------------------------------------------------------#
-digital_option_strike = 150
+digital_option_strike = 250
 option_type = "call"
 payoff_amount = 1
 #-----------------------------------------------------------#
@@ -32,8 +32,8 @@ digital_call_option.price()
 digital_call_option.visualize_payoff()
 
 #-----------------------------------------------------------#
-ra_strike_low = 150
-ra_strike_high = 250
+ra_strike_low = 225
+ra_strike_high = 275
 payoff_amount = 1
 #-----------------------------------------------------------#
 
