@@ -3,7 +3,7 @@ from currentbonds import treasury_yield
 from exotics import DigitalOption, SinglePeriodRangeAccrual
 
 #-----------------------------------------------------------#
-ticker = "AMZN"
+ticker = "AAPL"
 T = 5  # years
 r = treasury_yield(T)  # risk-free rate (annual)
 n = 10  # number of periods in the binomial model
