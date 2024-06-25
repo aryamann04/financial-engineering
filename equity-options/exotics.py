@@ -27,12 +27,34 @@ class DigitalOption:
     def digital_option_bs_price(self):
         x = self._x()
         if self.option_type == "call":
-            return np.exp(-self.r * self.T) * norm.cdf(-x)
+            return np.exp(-self.r * self.T) * norm.cdf(-x) * self.payoff_amount
         else:
-            return np.exp(-self.r * self.T) * norm.cdf(x)
+            return np.exp(-self.r * self.T) * norm.cdf(x) * self.payoff_amount
 
     def price(self):
-        return print(f"${self.bs_price * self.payoff_amount:.2f}")
+        return print(f"{self.ticker} Digital {self.option_type} with strike {self.K}: ${self.bs_price:.2f}")
+
+class SinglePeriodRangeAccrual:
+    def __init__(self, ticker, r, T, K_low, K_up, coupon):
+        self.ticker = ticker
+        self.r = r
+        self.T = T
+        self.K_low = K_low
+        self.K_up = K_up
+        self.coupon = coupon
+        self.bs_price = self.range_accrual_bs_price()
+
+    def range_accrual_bs_price(self):
+        digital_call_low = DigitalOption(self.ticker, self.r, self.T, self.K_low, option_type="call")
+        digital_call_up = DigitalOption(self.ticker, self.r, self.T, self.K_up, option_type="call")
+
+        price_low = digital_call_low.digital_option_bs_price()
+        price_up = digital_call_up.digital_option_bs_price()
+
+        return self.coupon * (price_low - price_up)
+
+    def price(self):
+        print(f"{self.ticker} Single-period range accrual {self.K_low}-{self.K_up}: ${self.bs_price:.2f}")
 
 def get_iv(tic, K, T, option_type):
     ticker = yf.Ticker(tic)
