@@ -8,6 +8,8 @@ T = 5  # years
 r = treasury_yield(T)  # risk-free rate (annual)
 n = 10  # number of periods in the binomial model
 percent_itm_otm = 0.2  # for option strategies
+mp_payoff = False  # whether to use market price to calculate payoff &
+                   # breakeven points, default with Black-Scholes price
 #-----------------------------------------------------------#
 
 # create a strategy object and call the relevant strategy function
@@ -16,7 +18,7 @@ strategy.bull_call_spread()
 
 strategy.strategy_price()  # print Black-Scholes and market price
 strategy.greeks()  # print strategy greeks
-strategy.visualize_payoff()  # view payoff graph and break-even points
+strategy.visualize_payoff(mp_payoff)  # view payoff graph and break-even points
 
 #-----------------------------------------------------------#
 digital_option_strike = 150
@@ -27,19 +29,20 @@ payoff_amount = 1
 digital_call_option = DigitalOption(ticker, r, T, digital_option_strike,
                                     option_type, payoff_amount)
 digital_call_option.price()
+digital_call_option.visualize_payoff()
 
 #-----------------------------------------------------------#
-range_accrual_strike_low = 150
-range_accrual_strike_high = 250
+ra_strike_low = 150
+ra_strike_high = 250
 payoff_amount = 1
 #-----------------------------------------------------------#
 
 single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T,
-                                                       range_accrual_strike_low,
-                                                       range_accrual_strike_high,
+                                                       ra_strike_low,
+                                                       ra_strike_high,
                                                        payoff_amount)
 single_period_range_accrual.price()
-
+single_period_range_accrual.visualize_payoff()
 '''
 available option strategies: 
 
