@@ -1,6 +1,6 @@
 from optionstrategies import OptionStrategy
 from currentbonds import treasury_yield
-from exotics import DigitalOption
+from exotics import DigitalOption, SinglePeriodRangeAccrual
 
 #-----------------------------------------------------------#
 ticker = "AMZN"
@@ -21,12 +21,24 @@ strategy.visualize_payoff()  # view payoff graph and break-even points
 #-----------------------------------------------------------#
 digital_option_strike = 150
 option_type = "call"
-payoff_amount = 100
+payoff_amount = 1
 #-----------------------------------------------------------#
 
 digital_call_option = DigitalOption(ticker, r, T, digital_option_strike,
                                     option_type, payoff_amount)
 digital_call_option.price()
+
+#-----------------------------------------------------------#
+range_accrual_strike_low = 150
+range_accrual_strike_high = 250
+payoff_amount = 1
+#-----------------------------------------------------------#
+
+single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T,
+                                                       range_accrual_strike_low,
+                                                       range_accrual_strike_high,
+                                                       payoff_amount)
+single_period_range_accrual.price()
 
 '''
 available option strategies: 
