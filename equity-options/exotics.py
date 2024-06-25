@@ -34,6 +34,27 @@ class DigitalOption:
     def price(self):
         return print(f"{self.ticker} Digital {self.option_type} with strike {self.K}: ${self.bs_price:.2f}")
 
+    def visualize_payoff(self):
+        stock_prices = np.linspace(self.S_0 * 0.5, self.S_0 * 1.5, 1000)
+        if self.option_type == "call":
+            payoff = np.where(stock_prices > self.K, self.payoff_amount, 0)
+        else:
+            payoff = np.where(stock_prices < self.K, self.payoff_amount, 0)
+
+        profit_loss = payoff - self.bs_price
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(stock_prices, profit_loss, label=f'{self.option_type.capitalize()} Profit/Loss')
+        plt.axhline(0, color='black', linestyle='--', linewidth=0.5)
+        plt.axvline(self.K, color='red', linestyle='--', linewidth=0.5)
+        plt.text(self.K, max(profit_loss)/2, f'Strike={self.K}', verticalalignment='bottom', horizontalalignment='right')
+
+        plt.xlabel('Stock Price')
+        plt.ylabel('Profit/Loss')
+        plt.title(f'{self.ticker} Digital {self.option_type.capitalize()} Option Profit/Loss')
+        plt.legend()
+        plt.show()
+
 class SinglePeriodRangeAccrual:
     def __init__(self, ticker, r, T, K_low, K_up, coupon):
         self.ticker = ticker
@@ -55,6 +76,26 @@ class SinglePeriodRangeAccrual:
 
     def price(self):
         print(f"{self.ticker} Single-period range accrual {self.K_low}-{self.K_up}: ${self.bs_price:.2f}")
+
+    def visualize_payoff(self):
+        stock_prices = np.linspace(self.K_low * 0.5, self.K_up * 1.5, 1000)
+        payoff = np.where((stock_prices > self.K_low) & (stock_prices < self.K_up), self.coupon, 0)
+
+        profit_loss = payoff - self.bs_price
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(stock_prices, profit_loss, label='Range Accrual Profit/Loss')
+        plt.axhline(0, color='black', linestyle='--', linewidth=0.5)
+        plt.axvline(self.K_low, color='red', linestyle='--', linewidth=0.5)
+        plt.text(self.K_low, max(profit_loss)/2, f'K_low={self.K_low}', verticalalignment='bottom', horizontalalignment='right')
+        plt.axvline(self.K_up, color='red', linestyle='--', linewidth=0.5)
+        plt.text(self.K_up, max(profit_loss)/2, f'K_up={self.K_up}', verticalalignment='bottom', horizontalalignment='right')
+
+        plt.xlabel('Stock Price')
+        plt.ylabel('Profit/Loss')
+        plt.title(f'{self.ticker} Single-period Range Accrual Profit/Loss')
+        plt.legend()
+        plt.show()
 
 def get_iv(tic, K, T, option_type):
     ticker = yf.Ticker(tic)
