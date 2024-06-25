@@ -57,7 +57,7 @@ strategy.visualize_payoff()  # view payoff graph and break-even points
 
 <img width="600" alt="Screenshot 2024-06-22 at 9 04 23 PM" src="https://github.com/aryamann04/options/assets/140534650/3ce31b2b-0b1c-440d-82e8-82dcf3ad3724">
 
-- ```exotics.py``` Price digital options.
+- ```exotics.py``` Calculate the volatility skew of an option at a given strike price and plot the current real-time volatility surface. Price digital call options and digital put options. 
 
 - ```optionspricing.py``` Prices options with the binomial model as well as the Black Scholes model. Given a ticker, the current stock price and dividend yield are retreived via the yfinance library. The user enters the strike price, time to expiry, and option type ("call" or "put") as well as the number of periods for the binomial model. The volatility parameter is proxied by a 1 year historical volatility (standard deviation) of the stock's price. The program outputs the price calcualed by the bimonial model (both European and American), the Black-Scholes price, the current actual market price of the option, and the implied volatility. 
 
