@@ -7,7 +7,7 @@ import numpy as np
 from optionspricing import stock_data, bs_price
 
 class DigitalOption:
-    def __init__(self, ticker, r, T, K, option_type="call", position="long", creation_date=None):
+    def __init__(self, ticker, r, T, K, option_type="call", payoff_amount=1, position="long", creation_date=None):
         self.ticker = ticker
         self.r = r
         self.T = T
@@ -16,6 +16,7 @@ class DigitalOption:
         self.position = position
         self.creation_date = creation_date
 
+        self.payoff_amount = payoff_amount
         self.S_0, self.sigma = stock_data(ticker, creation_date)
         self.bs_price = self.digital_option_bs_price()
 
@@ -31,7 +32,7 @@ class DigitalOption:
             return np.exp(-self.r * self.T) * norm.cdf(x)
 
     def price(self):
-        return print(f"${self.bs_price:.2f}")
+        return print(f"${self.bs_price * self.payoff_amount:.2f}")
 
 def get_iv(tic, K, T, option_type):
     ticker = yf.Ticker(tic)
