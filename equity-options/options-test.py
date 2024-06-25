@@ -21,9 +21,11 @@ strategy.visualize_payoff()  # view payoff graph and break-even points
 #-----------------------------------------------------------#
 digital_option_strike = 150
 option_type = "call"
+payoff_amount = 100
 #-----------------------------------------------------------#
 
-digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type)
+digital_call_option = DigitalOption(ticker, r, T, digital_option_strike,
+                                    option_type, payoff_amount)
 digital_call_option.price()
 
 '''
