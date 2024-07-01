@@ -1,6 +1,6 @@
 from optionstrategies import OptionStrategy
 from currentbonds import treasury_yield
-from exotics import DigitalOption, SinglePeriodRangeAccrual
+from exotics import DigitalOption, SinglePeriodRangeAccrual, AsianOption
 
 #-----------------------------------------------------------#
 ticker = "AAPL"
@@ -8,8 +8,6 @@ T = 5  # years
 r = treasury_yield(T)  # risk-free rate (annual)
 n = 10  # number of periods in the binomial model
 percent_itm_otm = 0.2  # for option strategies
-mp_payoff = False  # whether to use market price to calculate payoff &
-                   # breakeven points, default with Black-Scholes price
 #-----------------------------------------------------------#
 
 # create a strategy object and call the relevant strategy function
@@ -21,6 +19,9 @@ strategy.greeks()  # print strategy greeks
 strategy.visualize_payoff(mp_payoff)  # view payoff graph and break-even points
 
 #-----------------------------------------------------------#
+#                         EXOTICS                           #
+#-----------------------------------------------------------#
+
 digital_option_strike = 250
 option_type = "call"
 payoff_amount = 1
@@ -31,10 +32,10 @@ digital_call_option = DigitalOption(ticker, r, T, digital_option_strike,
 digital_call_option.price()
 digital_call_option.visualize_payoff()
 
+
 #-----------------------------------------------------------#
 ra_strike_low = 225
 ra_strike_high = 275
-payoff_amount = 1
 #-----------------------------------------------------------#
 
 single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T,
@@ -43,6 +44,14 @@ single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T,
                                                        payoff_amount)
 single_period_range_accrual.price()
 single_period_range_accrual.visualize_payoff()
+
+#-----------------------------------------------------------#
+asian_option_strike = 250
+#-----------------------------------------------------------#
+
+asian_call_option = AsianOption(ticker, r, T, asian_option_strike, option_type)
+asian_call_option.price()
+
 '''
 available option strategies: 
 
@@ -77,4 +86,10 @@ available option strategies:
 *   long_call_butterfly_spread()
 *   short_call_butterfly_spread()
 *   iron_condor()
+
+available exotics: 
+
+*   digital call/put (Black-Scholes & Monte Carlo)
+*   single-period range accrual (Black-Scholes & Monte Carlo)
+*   asian call/put (Monte Carlo)
 '''
