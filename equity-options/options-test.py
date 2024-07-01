@@ -8,6 +8,8 @@ T = 5  # years
 r = treasury_yield(T)  # risk-free rate (annual)
 n = 10  # number of periods in the binomial model
 percent_itm_otm = 0.2  # for option strategies
+mp_payoff = False  # whether to use market price to calculate
+                   # payoffs and breakeven points
 #-----------------------------------------------------------#
 
 # create a strategy object and call the relevant strategy function
