@@ -74,8 +74,11 @@ class OptionStrategy:
         print(f"{self.ticker} {self.percent_otm_itm*100}% {self.strategy_name}")
         print(f"******************************\n")
         self.total_price = sum(option.price if option.position == 'long' else -option.price for option in self.options)
-        self.total_market_price = sum(option.market if option.position == 'long' else -option.market for option in self.options)
-
+        self.total_market_price = sum(
+            option.market if option.position == 'long' else -1 * option.market
+            for option in self.options
+            if option.market is not None
+        )
         print(f"\n********** STRATEGY PRICE **********\n")
         price_table = [
             ["Black-Scholes", f"${self.total_price:.2f}"],
@@ -123,7 +126,7 @@ class OptionStrategy:
 
         return {"Delta": delta, "Gamma": gamma, "Theta": theta, "Vega": vega, "Rho": rho}
 
-    def visualize_payoff(self):
+    def visualize_payoff(self, market_price=False):
         stock_prices = np.linspace(self.stock_price * 0.5, self.stock_price * 1.5, 1000)
         total_payoff = np.zeros_like(stock_prices)
 
@@ -140,7 +143,10 @@ class OptionStrategy:
             elif option.position == 'short':
                 total_payoff -= payoff
 
-        total_profit_loss = total_payoff - self.total_price
+        if market_price:
+            total_profit_loss = total_payoff - self.total_market_price
+        else:
+            total_profit_loss = total_payoff - self.total_price
 
         plt.figure(figsize=(10, 6))
         plt.plot(stock_prices, total_profit_loss, label=f'{self.strategy_name} P/L')
