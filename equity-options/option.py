@@ -8,7 +8,6 @@ from optionspricing import (stock_data,
                             actual_option_price,
                             implied_volatility,
                             print_option_price)
-from exotics import vol_skew
 from montecarlo import monte_carlo_european
 
 class Option:
