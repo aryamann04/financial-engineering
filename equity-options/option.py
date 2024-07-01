@@ -8,6 +8,8 @@ from optionspricing import (stock_data,
                             actual_option_price,
                             implied_volatility,
                             print_option_price)
+from exotics import vol_skew
+from montecarlo import monte_carlo_european
 
 class Option:
     def __init__(self, ticker, r, T, K, n, option_type="call", position="long", creation_date=None):
@@ -33,6 +35,10 @@ class Option:
     @property
     def binom_american(self):
         return binom_price(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.n, self.option_type, american=True)
+
+    @property
+    def monte_carlo_price(self):
+        return monte_carlo_european(self.S_0, self.K, self.T, self.r, self.sigma, self.option_type)
 
     @property
     def market(self):
