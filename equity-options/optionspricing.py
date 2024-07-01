@@ -119,7 +119,7 @@ def print_option_price(ticker, r, T, K, n, option_type="call", creation_date=Non
     european_price = binom_price(S_0, K, T, r, sigma, q, n, option_type=option_type, american=False)
     american_price = binom_price(S_0, K, T, r, sigma, q, n, option_type=option_type, american=True)
     black_scholes_price = bs_price(S_0, K, T, r, sigma, q, option_type=option_type)
-    monte_carlo_price = monte_carlo_european(S_0, K, T, r, sigma, option_type=option_type)
+    monte_carlo_price = monte_carlo_european(S_0, K, T, r, q, sigma, option_type=option_type)
 
     if creation_date is None:
         actual_price, exp = actual_option_price(ticker, K, T, option_type)
