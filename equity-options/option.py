@@ -38,7 +38,7 @@ class Option:
 
     @property
     def monte_carlo_price(self):
-        return monte_carlo_european(self.S_0, self.K, self.T, self.r, self.sigma, self.option_type)
+        return monte_carlo_european(self.S_0, self.K, self.T, self.r, self.q, self.sigma, self.option_type)
 
     @property
     def market(self):
