@@ -57,7 +57,9 @@ strategy.visualize_payoff()  # view payoff graph and break-even points
 
 <img width="600" alt="Screenshot 2024-06-22 at 9 04 23 PM" src="https://github.com/aryamann04/options/assets/140534650/3ce31b2b-0b1c-440d-82e8-82dcf3ad3724">
 
-- ```exotics.py```  Price digital call/put options, single period range accruals, and Asian options with the Black-Scholes model. Calculate the volatility skew of an option at a given strike price and plot the current real-time volatility surface.
+- ```exotics.py```  Price digital call/put options, single period range accruals, and Asian options with the Black-Scholes model and Monte Carlo simulation.
+
+- ```volatility.py``` Calculate the volatility skew of an option at a given strike price and plot the current real-time volatility surface.
   
 <img width="600" alt="Screenshot 2024-06-25 at 9 24 02 PM" src="https://github.com/aryamann04/financial-engineering/assets/140534650/7d51d623-9359-480c-bfa6-4795e1982620">
 
