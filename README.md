@@ -1,7 +1,5 @@
 # financial-engineering
 
-[in progress]
-
 ## Functionalities 
 ### Equity Options
 
