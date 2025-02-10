@@ -85,4 +85,7 @@ def plot_sabr_vol_smile(ticker, expiry_years, F, sabr_model):
 
 # Example Usage
 sabr = SABRModel(alpha=0.2, beta=0.5, rho=-0.3, nu=0.4)
-plot_sabr_vol_smile("AAPL", 0.5, 150, sabr)
+ticker = input("Enter ticker: ")
+T = int(input("Enter expiry (years): "))
+F = int(input("Enter F: "))
+plot_sabr_vol_smile(ticker, T, F, sabr)
