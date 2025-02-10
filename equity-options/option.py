@@ -1,5 +1,6 @@
 from scipy.stats import norm
 import numpy as np
+import yfinance as yf
 from tabulate import tabulate
 from optionspricing import (stock_data,
                             div_yield,
