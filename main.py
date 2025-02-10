@@ -36,9 +36,50 @@ def handle_equity_options():
     n = int(input("Enter the number of periods in the binomial model: "))
     percent_itm_otm = float(input("Enter the percent in-the-money/out-the-money (e.g., 0.2): "))
     exotic = input("Do you want an exotic option? (yes/no): ").strip().lower()
+
+if exotic == "yes":
+    print("\nAvailable Exotic Options:")
+    exotic_strategies = [
+        "Digital Call Option",
+        "Single Period Range Accrual",
+        "Asian Call Option"
+    ]
     
+    for i, strat in enumerate(exotic_strategies, 1):
+        print(f"{i}. {strat}")
+    
+    exotic_choice = int(input(f"Select an exotic option (1-{len(exotic_strategies)}) : "))
+
+    if exotic_choice == 1:  # Digital Call Option
+        digital_option_strike = 250
+        option_type = "call"
+        payoff_amount = 1
+
+        digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type, payoff_amount)
+        digital_call_option.price()
+        digital_call_option.visualize_payoff()
+
+    elif exotic_choice == 2:  # Single Period Range Accrual
+        ra_strike_low = 225
+        ra_strike_high = 275
+
+        single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
+        single_period_range_accrual.price()
+        single_period_range_accrual.visualize_payoff()
+
+    elif exotic_choice == 3:  # Asian Call Option
+        asian_option_strike = 250
+
+        asian_call_option = AsianOption(ticker, r, T, asian_option_strike, option_type)
+        asian_call_option.price()
+
+    else:
+        print("Invalid choice. Please restart and select a valid option.")
+
+else:
     strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
-    print("\nAvailable Strategies:")
+    print("\nAvailable Standard Option Strategies:")
+    
     strategies = [
         "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
         "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
