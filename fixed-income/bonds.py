@@ -71,6 +71,8 @@ class ZeroCouponBond:
 class ZeroCouponBondOption:
     def __init__(self, zcb, strike, expiry):
         self.zcb = zcb
+        binomial_price(zcb) 
+        
         self.strike = strike
         self.expiry = int(expiry)
         self.option_tree = None
