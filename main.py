@@ -60,15 +60,15 @@ def handle_equity_options():
             digital_call_option.visualize_payoff()
 
         elif exotic_choice == 2:  # Single Period Range Accrual
-            ra_strike_low = 225
-            ra_strike_high = 275
+            ra_strike_low = input("Enter low strike price: ")
+            ra_strike_high = input("Enter high strike price: ")
 
             single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
             single_period_range_accrual.price()
             single_period_range_accrual.visualize_payoff()
 
         elif exotic_choice == 3:  # Asian Call Option
-            asian_option_strike = 250
+            asian_option_strike = input("Enter strike price: ")
 
             asian_call_option = AsianOption(ticker, r, T, asian_option_strike)
             asian_call_option.price()
@@ -81,7 +81,7 @@ def handle_equity_options():
         print("\nAvailable Standard Option Strategies:")
     
         strategies = [
-                "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
+            "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
             "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
             "covered_call", "married_put", "bull_call_spread", "bear_put_spread", "credit_call_spread", 
             "credit_put_spread", "protective_collar", "long_straddle", "long_strangle", "short_straddle", 
