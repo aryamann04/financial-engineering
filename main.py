@@ -37,56 +37,56 @@ def handle_equity_options():
     percent_itm_otm = float(input("Enter the percent in-the-money/out-the-money (e.g., 0.2): "))
     exotic = input("Do you want an exotic option? (yes/no): ").strip().lower()
 
-if exotic == "yes":
-    print("\nAvailable Exotic Options:")
-    exotic_strategies = [
-        "Digital Call Option",
-        "Single Period Range Accrual",
-        "Asian Call Option"
-    ]
+    if exotic == "yes":
+        print("\nAvailable Exotic Options:")
+        exotic_strategies = [
+            "Digital Call Option",
+            "Single Period Range Accrual",
+            "Asian Call Option"
+        ]
     
-    for i, strat in enumerate(exotic_strategies, 1):
-        print(f"{i}. {strat}")
+        for i, strat in enumerate(exotic_strategies, 1):
+            print(f"{i}. {strat}")
     
-    exotic_choice = int(input(f"Select an exotic option (1-{len(exotic_strategies)}) : "))
+        exotic_choice = int(input(f"Select an exotic option (1-{len(exotic_strategies)}) : "))
 
-    if exotic_choice == 1:  # Digital Call Option
-        digital_option_strike = 250
-        option_type = "call"
-        payoff_amount = 1
+        if exotic_choice == 1:  # Digital Call Option
+            digital_option_strike = 250
+            option_type = "call"
+            payoff_amount = 1
 
-        digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type, payoff_amount)
-        digital_call_option.price()
-        digital_call_option.visualize_payoff()
+            digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type, payoff_amount)
+            digital_call_option.price()
+            digital_call_option.visualize_payoff()
 
-    elif exotic_choice == 2:  # Single Period Range Accrual
-        ra_strike_low = 225
-        ra_strike_high = 275
+        elif exotic_choice == 2:  # Single Period Range Accrual
+            ra_strike_low = 225
+            ra_strike_high = 275
 
-        single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
-        single_period_range_accrual.price()
-        single_period_range_accrual.visualize_payoff()
+            single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
+            single_period_range_accrual.price()
+            single_period_range_accrual.visualize_payoff()
 
-    elif exotic_choice == 3:  # Asian Call Option
-        asian_option_strike = 250
+        elif exotic_choice == 3:  # Asian Call Option
+            asian_option_strike = 250
 
-        asian_call_option = AsianOption(ticker, r, T, asian_option_strike, option_type)
-        asian_call_option.price()
+            asian_call_option = AsianOption(ticker, r, T, asian_option_strike, option_type)
+            asian_call_option.price()
+
+        else:
+            print("Invalid choice. Please restart and select a valid option.")
 
     else:
-        print("Invalid choice. Please restart and select a valid option.")
-
-else:
-    strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
-    print("\nAvailable Standard Option Strategies:")
+        strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
+        print("\nAvailable Standard Option Strategies:")
     
-    strategies = [
-        "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
-        "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
-        "covered_call", "married_put", "bull_call_spread", "bear_put_spread", "credit_call_spread", 
-        "credit_put_spread", "protective_collar", "long_straddle", "long_strangle", "short_straddle", 
-        "short_strangle", "long_call_butterfly_spread", "short_call_butterfly_spread", "iron_condor"
-    ]
+        strategies = [
+            "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
+            "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
+            "covered_call", "married_put", "bull_call_spread", "bear_put_spread", "credit_call_spread", 
+            "credit_put_spread", "protective_collar", "long_straddle", "long_strangle", "short_straddle", 
+            "short_strangle", "long_call_butterfly_spread", "short_call_butterfly_spread", "iron_condor"
+        ]
     for i, strat in enumerate(strategies, 1):
         print(f"{i}. {strat}")
     strat_choice = int(input("Select a strategy (1-{}) : ".format(len(strategies))))
