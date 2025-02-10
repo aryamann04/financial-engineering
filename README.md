@@ -1,5 +1,39 @@
 # financial-engineering
 
+- [Installation Guide](#installation-guide)
+- [Equity Options](#equity-options)
+  - [Option Strategies](#option-strategies)
+  - [Exotics](#exotics)
+  - [Volatility Analysis](#volatility-analysis)
+  - [Options Pricing](#options-pricing)
+- [Fixed Income](#fixed-income)
+  - [Zero Coupon Bonds](#zero-coupon-bonds-and-options-on-zcbs)
+  - [Caplets and Floorlets](#caplets-and-floorlets)
+  - [Current Bonds & Yield Curve](#current-bonds-and-yield-curve)
+
+## Installation Guide
+To install and use this financial engineering tool on your computer, follow these steps:
+
+### **Step 1: Clone the Repository**
+```sh
+git clone https://github.com/aryamann04/financial-engineering.git
+cd financial-engineering
+```
+
+### **Step 2: Install Dependencies**
+This project requires Python 3 and additional libraries. Install them using:
+```sh
+pip install -r requirements.txt
+```
+
+### **Step 3: Running the Program**
+To start the interactive financial tool, run:
+```sh
+python main.py
+```
+
+---
+
 ## Functionalities 
 ### Equity Options
 
@@ -60,7 +94,7 @@ strategy.visualize_payoff()  # view payoff graph and break-even points
 
 - ```volatility.py``` Calculate the volatility skew of an option at a given strike price and plot the current real-time volatility surface.
   
-- ```optionspricing.py``` Prices options with the binomial model as well as the Black Scholes model. Given a ticker, the current stock price and dividend yield are retreived via the yfinance library. The user enters the strike price, time to expiry, and option type ("call" or "put") as well as the number of periods for the binomial model. The volatility parameter is proxied by a 1 year historical volatility (standard deviation) of the stock's price. The program outputs the price calcualed by the bimonial model (both European and American), the Black-Scholes price, the current actual market price of the option, and the implied volatility. 
+- ```optionspricing.py``` Prices options with the binomial model as well as the Black Scholes model. Given a ticker, the current stock price and dividend yield are retrieved via the yfinance library. The user enters the strike price, time to expiry, and option type ("call" or "put") as well as the number of periods for the binomial model. The volatility parameter is proxied by a 1-year historical volatility (standard deviation) of the stock's price. The program outputs the price calculated by the binomial model (both European and American), the Black-Scholes price, the current actual market price of the option, and the implied volatility. 
 
 ### Fixed Income
 - ```bonds.py``` The main classes include ZeroCouponBond, ZeroCouponBondOption, Caplet, and Floorlet. Each class offers methods to construct interest rate trees, calculate instrument prices using the binomial model, and print the trees for visualization.
@@ -104,7 +138,7 @@ floorlet_6y.print_floorlet_tree()
 floorlet_6y.print_interest_tree()
 ```
 
-The following is an example of the binomial price tree output for the zero coupon bond. 
+The following is an example of the binomial price tree output for the zero coupon bond.
 
 <img width="480" alt="Screenshot 2024-06-23 at 1 55 48 AM" src="https://github.com/aryamann04/options/assets/140534650/178e6eea-5221-4a83-81c2-9251069961c9">
 
