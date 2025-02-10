@@ -122,14 +122,14 @@ def handle_fixed_income():
     
     elif choice == '2':
         face_value = float(input("Enter face value of bond: "))
-        T = float(input("Enter maturity of bond (years): "))
+        n = float(input("Enter maturity of bond (integer): "))
         r_0 = float(input("Enter initial interest rate: "))
         u = float(input("Enter up-factor: "))
         d = float(input("Enter down-factor: "))
         zcb_option_expiry = float(input("Enter option expiry (years): "))
         zcb_option_strike = float(input("Enter option strike price: "))
         
-        zcb = ZeroCouponBond(face_value, T, r_0, u, d)
+        zcb = ZeroCouponBond(face_value, n, r_0, u, d)
         option = ZeroCouponBondOption(zcb, zcb_option_strike, zcb_option_expiry)
         option.price()
         option.print_option_tree()
