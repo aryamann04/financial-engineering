@@ -80,13 +80,13 @@ def handle_equity_options():
         strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
         print("\nAvailable Standard Option Strategies:")
     
-        strategies = [
-            "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
-            "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
-            "covered_call", "married_put", "bull_call_spread", "bear_put_spread", "credit_call_spread", 
-            "credit_put_spread", "protective_collar", "long_straddle", "long_strangle", "short_straddle", 
-            "short_strangle", "long_call_butterfly_spread", "short_call_butterfly_spread", "iron_condor"
-        ]
+    strategies = [
+         "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
+        "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
+        "covered_call", "married_put", "bull_call_spread", "bear_put_spread", "credit_call_spread", 
+        "credit_put_spread", "protective_collar", "long_straddle", "long_strangle", "short_straddle", 
+        "short_strangle", "long_call_butterfly_spread", "short_call_butterfly_spread", "iron_condor"
+    ]
     for i, strat in enumerate(strategies, 1):
         print(f"{i}. {strat}")
     strat_choice = int(input("Select a strategy (1-{}) : ".format(len(strategies))))
