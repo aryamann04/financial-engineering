@@ -1,6 +1,12 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath("equity-options")) 
 from optionstrategies import OptionStrategy
-from currentbonds import treasury_yield
 from exotics import DigitalOption, SinglePeriodRangeAccrual, AsianOption
+
+sys.path.append(os.path.abspath("fixed-income")) 
+from currentbonds import treasury_yield
 
 #-----------------------------------------------------------#
 ticker = "AAPL"
