@@ -8,6 +8,7 @@ from optionspricing import (stock_data,
                             actual_option_price,
                             implied_volatility,
                             print_option_price)
+from svi import SVIModel
 from montecarlo import monte_carlo_european
 
 class Option:
@@ -22,7 +23,15 @@ class Option:
         self.position = position
 
         self.creation_date = creation_date
-        self.S_0, self.sigma = stock_data(ticker, creation_date)
+        self.S_0, _ = stock_data(ticker, creation_date)
+
+        strikes, market_vols = self._fetch_market_vol_data()
+        if strikes and market_vols:
+            svi_model = SVIModel()
+            svi_model.fit(strikes, market_vols, self.S_0)
+            self.sigma = svi_model.svi_volatility(np.log(self.K / self.S_0))
+        else:
+            self.sigma = _ , = stock_data(ticker, creation_date)
 
         self.q = div_yield(ticker)
         self.price = bs_price(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
@@ -116,6 +125,17 @@ class Option:
             ["Rho", f"{self.rho:.4f}"]
         ]
         print(tabulate(greeks_table, headers=["Greek", "Value"], tablefmt="grid"))
+    
+    def _fetch_market_vol_data(self):
+
+        stock = yf.Ticker(self.ticker)
+        options = stock.option_chain()
+
+        strikes = options.calls['strike'].values
+        market_vols = options.calls['impliedVolatility'].values
+
+        valid_indices = ~np.isnan(market_vols)
+        return strikes[valid_indices].tolist(), market_vols[valid_indices].tolist()
 
 def create_option(ticker, r, T, K, n, option_type="call", position="long", creation_date=None):
     return Option(ticker, r, T, K, n, option_type, position, creation_date)

@@ -145,7 +145,7 @@ def print_option_price(ticker, r, T, K, n, option_type="call", creation_date=Non
         iv = np.nan
 
     vol_table = [
-        ["Historical", "1 year std dev", f"{sigma*100:.2f}%"],
+        ["Model", "--", f"{sigma*100:.2f}%"],
         ["Implied", "Black-Scholes", f"{iv*100:.2f}%"]
     ]
     print(tabulate(vol_table, headers=["Volatility Type", "Method", "Value"], tablefmt="grid"))
