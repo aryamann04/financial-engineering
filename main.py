@@ -70,7 +70,7 @@ def handle_equity_options():
         elif exotic_choice == 3:  # Asian Call Option
             asian_option_strike = 250
 
-            asian_call_option = AsianOption(ticker, r, T, asian_option_strike, option_type)
+            asian_call_option = AsianOption(ticker, r, T, asian_option_strike)
             asian_call_option.price()
 
         else:
