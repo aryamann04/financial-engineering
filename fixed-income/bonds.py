@@ -6,7 +6,7 @@ from currentbonds import treasury_yield
 class ZeroCouponBond:
     def __init__(self, face_value, n, r_0, u, d):
         self.face_value = face_value
-        self.n = n
+        self.n = int(n)
         self.r_0 = r_0
         self.u = u
         self.d = d
