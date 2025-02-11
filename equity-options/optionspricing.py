@@ -101,7 +101,7 @@ def implied_volatility(option_price, S, K, T, r, q, option_type):
         return np.nan
 
 def print_option_price(ticker, r, T, K, n, option_type="call", creation_date=None):
-    S_0, sigma = stock_data(ticker, creation_date)
+    S_0, _ = stock_data(ticker, creation_date)
     q = div_yield(ticker)
 
     params_table = [

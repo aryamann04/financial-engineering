@@ -126,8 +126,16 @@ class Option:
             ["Rho", f"{self.rho:.4f}"]
         ]
         print(tabulate(greeks_table, headers=["Greek", "Value"], tablefmt="grid"))
+
+        strikes, market_vols = self._fetch_market_vol_data()
+        svi_sigma = None
+        if strikes and market_vols:
+            svi_model = SVIModel()
+            svi_model.fit(strikes, market_vols, self.S_0)
+            svi_sigma = svi_model.svi_volatility(np.log(self.K / self.S_0))
+
         print("\n********** SVI CALIBRATION **********\n")
-        if self.sigma is not None:
+        if svi_sigma is not None:
             svi_table = [
                 ["Strike (K)", f"{self.K}"],
                 ["Spot Price (S_0)", f"{self.S_0}"],
