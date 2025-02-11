@@ -31,7 +31,7 @@ def main():
 
 def handle_equity_options():
     print("\nEquity Options Selected.")
-    choice = input("Enter 1 for option strategy/exotics, 2 for single option")
+    choice = input("Enter 1 for option strategy/exotics, 2 for single option: ")
 
     if choice == '1':
         ticker = input("Enter the stock ticker: ")
@@ -103,7 +103,7 @@ def handle_equity_options():
                 strategy.visualize_payoff(False)
             else:
                 print("Invalid choice. Returning to main menu.")
-    elif choice == 2: 
+    elif choice == '2': 
         ticker = input("Enter the stock ticker: ")
         K = float(input("Enter the strike price: "))
         T = float(input("Enter time to maturity (in years): "))
