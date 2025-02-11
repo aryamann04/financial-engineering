@@ -126,6 +126,16 @@ class Option:
             ["Rho", f"{self.rho:.4f}"]
         ]
         print(tabulate(greeks_table, headers=["Greek", "Value"], tablefmt="grid"))
+        print("\n********** SVI CALIBRATION **********\n")
+        if self.sigma is not None:
+            svi_table = [
+                ["Strike (K)", f"{self.K}"],
+                ["Spot Price (S_0)", f"{self.S_0}"],
+                ["Implied Volatility (from SVI)", f"{self.sigma * 100:.2f}%"]
+            ]
+            print(tabulate(svi_table, headers=["Parameter", "Value"], tablefmt="grid"))
+        else:
+            print("SVI calibration data is not available for this option.")
     
     def _fetch_market_vol_data(self):
 
