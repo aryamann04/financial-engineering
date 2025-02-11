@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath("fixed-income"))
 
 from optionstrategies import OptionStrategy
 from exotics import DigitalOption, SinglePeriodRangeAccrual, AsianOption
+from option import Option
 from bonds import Bond, ZeroCouponBond, ZeroCouponBondOption, Caplet, Floorlet
 from currentbonds import treasury_yield, plot_yield_curve
 
@@ -30,75 +31,91 @@ def main():
 
 def handle_equity_options():
     print("\nEquity Options Selected.")
-    ticker = input("Enter the stock ticker: ")
-    T = float(input("Enter time to maturity (in years): "))
-    r = treasury_yield(T)
-    n = int(input("Enter the number of periods in the binomial model: "))
-    percent_itm_otm = float(input("Enter the percent in-the-money/out-the-money (e.g., 0.2): "))
-    exotic = input("Do you want an exotic option? (yes/no): ").strip().lower()
+    choice = input("Enter 1 for option strategy/exotics, 2 for single option")
 
-    if exotic == "yes":
-        print("\nAvailable Exotic Options:")
-        exotic_strategies = [
-            "Digital Call Option",
-            "Single Period Range Accrual",
-            "Asian Call Option"
-        ]
-    
-        for i, strat in enumerate(exotic_strategies, 1):
-            print(f"{i}. {strat}")
-    
-        exotic_choice = int(input(f"Select an exotic option (1-{len(exotic_strategies)}) : "))
+    if choice == '1':
+        ticker = input("Enter the stock ticker: ")
+        T = float(input("Enter time to maturity (in years): "))
+        r = treasury_yield(T)
+        n = int(input("Enter the number of periods in the binomial model: "))
+        percent_itm_otm = float(input("Enter the percent in-the-money/out-the-money (e.g., 0.2): "))
+        exotic = input("Do you want an exotic option? (yes/no): ").strip().lower()
 
-        if exotic_choice == 1:  # Digital Call Option
-            digital_option_strike = 250
-            option_type = "call"
-            payoff_amount = 1
+        if exotic == "yes":
+            print("\nAvailable Exotic Options:")
+            exotic_strategies = [
+                "Digital Call Option",
+                "Single Period Range Accrual",
+                "Asian Call Option"
+            ]
+        
+            for i, strat in enumerate(exotic_strategies, 1):
+                print(f"{i}. {strat}")
+        
+            exotic_choice = int(input(f"Select an exotic option (1-{len(exotic_strategies)}) : "))
 
-            digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type, payoff_amount)
-            digital_call_option.price()
-            digital_call_option.visualize_payoff()
+            if exotic_choice == 1:  # Digital Call Option
+                digital_option_strike = 250
+                option_type = "call"
+                payoff_amount = 1
 
-        elif exotic_choice == 2:  # Single Period Range Accrual
-            ra_strike_low = input("Enter low strike price: ")
-            ra_strike_high = input("Enter high strike price: ")
+                digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type, payoff_amount)
+                digital_call_option.price()
+                digital_call_option.visualize_payoff()
 
-            single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
-            single_period_range_accrual.price()
-            single_period_range_accrual.visualize_payoff()
+            elif exotic_choice == 2:  # Single Period Range Accrual
+                ra_strike_low = input("Enter low strike price: ")
+                ra_strike_high = input("Enter high strike price: ")
 
-        elif exotic_choice == 3:  # Asian Call Option
-            asian_option_strike = input("Enter strike price: ")
+                single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
+                single_period_range_accrual.price()
+                single_period_range_accrual.visualize_payoff()
 
-            asian_call_option = AsianOption(ticker, r, T, asian_option_strike)
-            asian_call_option.price()
+            elif exotic_choice == 3:  # Asian Call Option
+                asian_option_strike = input("Enter strike price: ")
+
+                asian_call_option = AsianOption(ticker, r, T, asian_option_strike)
+                asian_call_option.price()
+
+            else:
+                print("Invalid choice. Please restart and select a valid option.")
 
         else:
-            print("Invalid choice. Please restart and select a valid option.")
+            strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
+            print("\nAvailable Standard Option Strategies:")
+        
+            strategies = [
+                "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
+                "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
+                "covered_call", "married_put", "bull_call_spread", "bear_put_spread", "credit_call_spread", 
+                "credit_put_spread", "protective_collar", "long_straddle", "long_strangle", "short_straddle", 
+                "short_strangle", "long_call_butterfly_spread", "short_call_butterfly_spread", "iron_condor"
+            ]
+            for i, strat in enumerate(strategies, 1):
+                print(f"{i}. {strat}")
+            strat_choice = int(input("Select a strategy (1-{}) : ".format(len(strategies))))
 
+            if 1 <= strat_choice <= len(strategies):
+                selected_strategy = strategies[strat_choice - 1]
+                getattr(strategy, selected_strategy)()
+                strategy.strategy_price()
+                strategy.greeks()
+                strategy.visualize_payoff(False)
+            else:
+                print("Invalid choice. Returning to main menu.")
+    elif choice == 2: 
+        ticker = input("Enter the stock ticker: ")
+        K = float(input("Enter the strike price: "))
+        T = float(input("Enter time to maturity (in years): "))
+        option_type = input("Enter option type (call/put): ")
+        r = treasury_yield(T)
+        n = int(input("Enter the number of periods in the binomial model: "))
+
+        option = Option(ticker, r, T, K, n, option_type)
+        option.price()
+        option.summary()
     else:
-        strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
-        print("\nAvailable Standard Option Strategies:")
-    
-        strategies = [
-            "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
-            "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
-            "covered_call", "married_put", "bull_call_spread", "bear_put_spread", "credit_call_spread", 
-            "credit_put_spread", "protective_collar", "long_straddle", "long_strangle", "short_straddle", 
-            "short_strangle", "long_call_butterfly_spread", "short_call_butterfly_spread", "iron_condor"
-        ]
-        for i, strat in enumerate(strategies, 1):
-            print(f"{i}. {strat}")
-        strat_choice = int(input("Select a strategy (1-{}) : ".format(len(strategies))))
-
-        if 1 <= strat_choice <= len(strategies):
-            selected_strategy = strategies[strat_choice - 1]
-            getattr(strategy, selected_strategy)()
-            strategy.strategy_price()
-            strategy.greeks()
-            strategy.visualize_payoff(False)
-        else:
-            print("Invalid choice. Returning to main menu.")
+        print("Invalid choice. Returning to main menu.")
 
 def handle_fixed_income():
     print("\nFixed Income Selected.")
