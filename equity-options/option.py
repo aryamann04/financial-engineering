@@ -139,7 +139,7 @@ class Option:
             svi_table = [
                 ["Strike (K)", f"{self.K}"],
                 ["Spot Price (S_0)", f"{self.S_0}"],
-                ["Implied Volatility (from SVI)", f"{self.sigma * 100:.2f}%"]
+                ["Implied Volatility (from SVI)", f"{svi_sigma * 100:.2f}%"]
             ]
             print(tabulate(svi_table, headers=["Parameter", "Value"], tablefmt="grid"))
         else:
