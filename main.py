@@ -112,7 +112,6 @@ def handle_equity_options():
         n = int(input("Enter the number of periods in the binomial model: "))
 
         option = Option(ticker, r, T, K, n, option_type)
-        option.price()
         option.summary()
     else:
         print("Invalid choice. Returning to main menu.")
