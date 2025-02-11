@@ -24,8 +24,8 @@ class Option:
         self.position = position
 
         self.creation_date = creation_date
-        self.S_0, _ = stock_data(ticker, creation_date)
-
+        self.S_0, self.sigma = stock_data(ticker, creation_date)
+        """
         strikes, market_vols = self._fetch_market_vol_data()
         if strikes and market_vols:
             svi_model = SVIModel()
@@ -33,7 +33,7 @@ class Option:
             self.sigma = svi_model.svi_volatility(np.log(self.K / self.S_0))
         else:
             self.sigma = _ , = stock_data(ticker, creation_date)
-
+        """
         self.q = div_yield(ticker)
         self.price = bs_price(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
 
