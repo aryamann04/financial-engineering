@@ -1,0 +1,8 @@
+numpy
+pandas
+matplotlib
+scipy
+requests
+beautifulsoup4
+yfinance
+tabulate
