@@ -6,6 +6,7 @@ from .pricing.pricing import bs_price, binom_price
 from .pricing.montecarlo import monte_carlo_european
 from options.utilities.marketdata import MarketDataFetcher
 from options.volatility.iv import iv
+from options.utilities.printer import print_option_summary
 
 class Option:
     def __init__(self, ticker, r, T, K, n, sigma=None, option_type="call", position="long", creation_date=None):
@@ -35,6 +36,9 @@ class Option:
         prices["Monte Carlo"] = self.monte_carlo_price
         prices["Market Price"] = self.market
         return prices
+
+    def summary(self): 
+        print_option_summary(self)
     
     @property
     def bs_price(self):
