@@ -8,6 +8,7 @@ class MarketDataFetcher:
         self.ticker = ticker.upper()
         self.T = T
         self.creation_date = pd.to_datetime(creation_date) if creation_date is not None else None
+        self.close_prices = self.get_close_prices()
 
     def get_close_prices(self):
         num_days = int(self.T * 365)  
