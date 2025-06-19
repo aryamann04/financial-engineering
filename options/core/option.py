@@ -9,7 +9,8 @@ from options.volatility.iv import bs_iv
 from options.utilities.printer import print_option_summary
 
 class Option:
-    def __init__(self, ticker, r, T, K, n, sigma=None, option_type="call", position="long", creation_date=None):
+    def __init__(self, ticker, r, T, K, n, sigma=None, option_type="call", position="long", 
+                 creation_date=None, fetcher=None):
         self.ticker = ticker
         self.r = r
         self.T = T
@@ -20,7 +21,9 @@ class Option:
         self.position = position 
         self.creation_date = creation_date
 
-        self.fetcher = MarketDataFetcher(ticker, T, creation_date)
+        # avoid repeatedly querying api 
+        self.fetcher = fetcher if fetcher else MarketDataFetcher(ticker, T, creation_date)
+
         self.S_0 = self.fetcher.current_price()
         self.q = self.fetcher.dividend_yield()
         self.sigma = sigma if sigma else self.fetcher.historical_volatility()

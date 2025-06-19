@@ -28,7 +28,8 @@ class OptionStrategy:
 
     # helper for ease of option creation with same parameters 
     def create_option(self, option_type, strike_price, position='long'):
-        option = create_option(self.ticker, self.rf, self.T, strike_price, self.n, option_type, position, creation_date=self.creation_date)
+        option = create_option(self.ticker, self.rf, self.T, strike_price, self.n, option_type, position, 
+                               creation_date=self.creation_date, fetcher=self.fetcher)
         itm_otm = ""
         percent_itm_otm = abs((strike_price - self.stock_price) / self.stock_price)
 
