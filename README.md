@@ -1,1 +1,162 @@
-# README 
+# financial-engineering
+
+- [Installation Guide](#installation-guide)
+- [Equity Options](#equity-options)
+  - [Option Strategies](#option-strategies)
+  - [Greeks](#greeks)
+  - [Exotics](#exotics)
+  - [Volatility](#volatility)
+- [Fixed Income](#fixed-income)
+  - [Zero Coupon Bonds](#zero-coupon-bonds-and-options-on-zcbs)
+  - [Caplets and Floorlets](#caplets-and-floorlets)
+  - [Current Bonds & Yield Curve](#current-bonds-and-yield-curve)
+
+## Installation Guide
+To install and use this tool on your computer, follow these steps:
+
+### **Step 1: Clone the Repository**
+```sh
+git clone https://github.com/aryamann04/financial-engineering.git
+cd financial-engineering
+```
+
+### **Step 2: Install Dependencies**
+This project requires Python 3 and additional libraries. Install them using:
+```sh
+pip install -r requirements.txt
+```
+
+### **Step 3: Running the Program**
+To start the interactive financial tool, run:
+```sh
+python main.py
+```
+
+---
+
+## Functionalities 
+### Equity Options
+
+### Option Strategies 
+- ```optionstrategies.py``` Price and visualize various option strategies on a ticker of your choice. Will output the options made, along with key information such as their Black-Scholes price, market price, and greeks. Enter a percent OTM/ITM the strategy should be. For instance, if you would like to place a long strangle with a long call 10% OTM and a long put 10% OTM, enter 0.1 in the ```percent_itm_otm``` field. Both the Black-Scholes price and market price of the strategy are printed as well as the breakeven points on the profit & loss plot. The greeks of the overall strategy are also printed. Strategies available include:
+  
+  - ```atm_call()```
+  - ```itm_call()```
+  - ```otm_call()```
+  - ```short_atm_call()```
+  - ```short_itm_call()```
+  - ```short_otm_call()```
+    
+  - ```atm_put()```
+  - ```itm_put()```
+  - ```otm_put()```
+  - ```short_atm_put()```
+  - ```short_itm_put()```
+  - ```short_otm_put()```
+    
+  -  ```covered_call()```
+  -  ```married_put()```
+
+  -  ```bull_call_spread()```
+  -  ```bear_put_spread()```
+  - ```call_credit_spread()```
+  - ```put_credit_spread()```
+    
+  -  ```protective_collar()```
+  -  ```long_straddle()```
+  -  ```long_strangle()```
+  -  ```short_straddle()```
+  -  ```short_strangle()```
+    
+  -  ```long_call_butterfly_spread()```
+  -  ```long_put_butterfly_spread()```
+  -  ```iron_condor()```
+
+```python
+ticker = "AAPL"
+T = 0.25  # years
+r = treasury_yield(T)  # risk-free rate (annual)
+n = 10  # number of periods in the binomial model
+percent_itm_otm = 0.1  # for option strategies
+
+# create a strategy object and call the relevant strategy function
+strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
+strategy.iron_condor()
+
+strategy.strategy_price()  # print Black-Scholes and market price
+strategy.greeks()  # print strategy greeks
+strategy.visualize_payoff()  # view payoff graph and break-even points
+```
+
+- ```optionspricing.py``` Prices options with the binomial model as well as the Black Scholes model. Given a ticker, the current stock price and dividend yield are retrieved via the yfinance library. The user enters the strike price, time to expiry, and option type ("call" or "put") as well as the number of periods for the binomial model. The volatility parameter is proxied by historical volatility (standard deviation) of the stock's price across a time period proportional to that of the option's life. The program outputs the price calculated by the binomial model (both European and American), the Black-Scholes price, the current actual market price of the option, and the implied volatility.
+
+### Greeks
+
+Greeks of individual options as well as multi-leg options strategies are calculated and printed upon execution of a strategy. Analytical formulas (partial derivatives of the Black-Scholes formula) are used to calculate:
+- ```delta```: sensitivity of the option's price to movement underlying stock price
+- ```gamma```: sensitivity of the option's delta to movement underlying stock price (second derivative of the Black-Scholes price with respect to the underlying stock price)
+- ```theta```: how quickly the option price decays as time passes
+- ```vega```: sensitivity of the option's price to movement in the volatility of the underlying stock
+- ```rho```: sensitivity of the option's price to movement in interest rates  
+These values are essential when hedging an option or multi-leg option strategy. 
+
+<img width="600" alt="Screenshot 2024-06-22 at 9 04 23 PM" src="https://github.com/aryamann04/options/assets/140534650/3ce31b2b-0b1c-440d-82e8-82dcf3ad3724">
+
+### Exotics 
+
+- ```exotics.py```  Price digital call/put options, single period range accruals, and Asian options with the Black-Scholes model and Monte Carlo simulation.  
+<img width="600" alt="Screenshot 2024-06-25 at 9 24 02 PM" src="https://github.com/aryamann04/financial-engineering/assets/140534650/7d51d623-9359-480c-bfa6-4795e1982620">
+
+### Volatility
+
+- ```volatility.py``` Calculate the volatility skew of an option at a given strike price and plot the current real-time volatility surface. Currently, historical volatility (standard deviation) of the stock's price across a time period proportional to that of the option's life is used as a proxy for the volatility parameter to the Black-Scholes call price formula. In the ```equity-options``` folder, the files ```svi.py``` and ```sabr.py``` (both currently in progress) attempt to incorporate more advanced measures of volatility as inputs to the Black-Scholes model, capturing the volatility surface in model pricing. 
+
+### Fixed Income
+- ```bonds.py``` The main functions include ZeroCouponBond, ZeroCouponBondOption, Caplet, and Floorlet. Each class offers methods to construct interest rate trees, calculate instrument prices using the binomial model, and print the trees for visualization.
+
+#### Zero Coupon Bonds and Options on ZCBs
+```python
+face_value = 100
+T = 4  # bond maturity in years
+r_0 = 0.06
+u = 1.25
+d = 0.9
+
+zcb_4y = ZeroCouponBond(face_value, T, r_0, u, d)
+zcb_4y.price()
+zcb_4y.print_bond_tree()
+zcb_4y.print_interest_tree()
+
+zcb_option_expiry = 2
+zcb_option_strike = 84
+
+zcb_4y_2yoption = ZeroCouponBondOption(zcb_4y, zcb_option_strike, zcb_option_expiry)
+zcb_4y_2yoption.price()
+zcb_4y_2yoption.print_option_tree()
+```
+
+#### Caplets and Floorlets
+```python
+cf_expiry = 6
+cf_notional = 1000  # notional amount in dollars
+caplet_strike = 0.02
+floorlet_strike = 0.08
+
+caplet_6y = Caplet(r_0, caplet_strike, cf_expiry, u, d, cf_notional)
+caplet_6y.price()
+caplet_6y.print_caplet_tree()
+caplet_6y.print_interest_tree()
+
+floorlet_6y = Floorlet(r_0, floorlet_strike, cf_expiry, u, d, cf_notional)
+floorlet_6y.price()
+floorlet_6y.print_floorlet_tree()
+floorlet_6y.print_interest_tree()
+```
+
+The following is an example of the binomial price tree output for the zero coupon bond.
+
+<img width="480" alt="Screenshot 2024-06-23 at 1 55 48 AM" src="https://github.com/aryamann04/options/assets/140534650/178e6eea-5221-4a83-81c2-9251069961c9">
+
+### Current Bonds and Yield Curve
+
+- ```currentbonds.py``` Get live information on U.S. Treasury Yields (1, 2, 3, 4, 6 months; 1, 2, 3, 5, 7, 10, 20, 30 years) and plot the current yield curve with ```plot_yield_curve()```. 
