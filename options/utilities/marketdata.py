@@ -33,7 +33,7 @@ class MarketDataFetcher:
     
     def historical_volatility(self):
         log_returns = np.log(self.close_prices / self.close_prices.shift(1))
-        sigma = np.std(log_returns) * np.sqrt(int(self.T * 365))  # annualize
+        sigma = np.std(log_returns) * np.sqrt(252)  # annualize
         return sigma
 
     def dividend_yield(self):
