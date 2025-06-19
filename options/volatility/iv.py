@@ -1,8 +1,7 @@
 from scipy.optimize import brentq
-
 import options.core.pricing.pricing as bs_price
 
-def implied_volatility(market, S_0, K, T, r, q, option_type="call"): 
+def bs_iv(market, S_0, K, T, r, q, option_type="call"): 
     if market or np.isnan(market):
         return "N/A"
 

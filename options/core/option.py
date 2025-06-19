@@ -5,7 +5,7 @@ from scipy.stats import norm
 from .pricing.pricing import bs_price, binom_price
 from .pricing.montecarlo import monte_carlo_european
 from options.utilities.marketdata import MarketDataFetcher
-from options.volatility.iv import iv
+from options.volatility.iv import bs_iv
 from options.utilities.printer import print_option_summary
 
 class Option:
@@ -66,7 +66,7 @@ class Option:
     @property
     def bs_iv(self):
         if self.market and not np.isnan(self.market):
-            return iv(self.market, self.S_0, self.K, self.T, self.r, self.q, self.option_type)
+            return bs_iv(self.market, self.S_0, self.K, self.T, self.r, self.q, self.option_type)
         return "N/A"
     
     def calculate_greeks(self, S, K, T, r, sigma, q, option_type):
