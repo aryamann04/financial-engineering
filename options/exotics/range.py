@@ -1,10 +1,9 @@
-# exotics/range.py
 import numpy as np
 import matplotlib.pyplot as plt
-from exotics.digital import DigitalOption
+
 from utilities.marketdata import MarketDataFetcher
-from pricing.montecarlo import monte_carlo_range_accrual
-from pricing.pricing import single_period_range_accrual_bs_price
+from options.core.pricing.montecarlo import monte_carlo_range_accrual
+from options.core.pricing.pricing import single_period_range_accrual_bs_price
 
 class SinglePeriodRangeAccrual:
     def __init__(self, ticker, r, T, K_low, K_up, coupon):

@@ -2,9 +2,9 @@ import numpy as np
 from datetime import datetime
 from scipy.stats import norm
 
-from pricing.pricing import binom_price
-from pricing.montecarlo import monte_carlo_european
-from utilities.marketdata import MarketDataFetcher
+from .pricing.pricing import binom_price
+from .pricing.montecarlo import monte_carlo_european
+from options.utilities.marketdata import MarketDataFetcher
 
 class Option:
     def __init__(self, ticker, r, T, K, n, option_type, sigma=None, q=None, creation_date=None):

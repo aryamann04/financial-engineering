@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utilities.marketdata import MarketDataFetcher
+from options.utilities.marketdata import MarketDataFetcher
 from options.core.pricing.montecarlo import monte_carlo_digital
 from options.core.pricing.pricing import digital_option_bs_price
 

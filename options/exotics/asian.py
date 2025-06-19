@@ -1,6 +1,6 @@
 import numpy as np
-from utilities.marketdata import MarketDataFetcher
-from pricing.pricing import monte_carlo_asian
+from options.utilities.marketdata import MarketDataFetcher
+from options.core.pricing.pricing import monte_carlo_asian
 
 class AsianOption:
     def __init__(self, ticker, r, T, K, option_type="call"):
