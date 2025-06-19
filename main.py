@@ -1,4 +1,6 @@
 import datetime
+import sys
+import os
 
 from options.core.option import Option
 from options.core.strategy import OptionStrategy
@@ -10,8 +12,9 @@ from fixed_income.core.bond import Bond
 from fixed_income.core.zcb import ZeroCouponBond, ZeroCouponBondOption
 from fixed_income.derivatives.caplet import Caplet
 from fixed_income.derivatives.floorlet import Floorlet
-
 from fixed_income.core.marketyields import treasury_yield, plot_yield_curve
+
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 def main():
     while True:
