@@ -1,31 +1,34 @@
-from option import create_option
-from utilities.marketdata import MarketDataFetcher
 import numpy as np
 import matplotlib.pyplot as plt
 from tabulate import tabulate
 
+from options.core.option import create_option
+from options.utilities.marketdata import MarketDataFetcher
+from options.utilities.printer import print_option_summary
+
 class OptionStrategy:
-    def __init__(self, ticker, percent_otm_itm, expiry_date, rf, n=100, creation_date=None):
+    def __init__(self, ticker, percent_otm_itm, T, rf, sigma=None, n=100, creation_date=None):
         self.ticker = ticker
 
         self.percent_otm_itm = percent_otm_itm
-        self.expiry_date = expiry_date
+        self.T = T
         self.rf = rf
         self.n = n
         self.creation_date = creation_date
 
-        self.fetcher = MarketDataFetcher(ticker, creation_date)
+        self.fetcher = MarketDataFetcher(ticker, T, creation_date)
         self.S_0 = self.fetcher.current_price()
         self.q = self.fetcher.dividend_yield()
-        self.sigma = self.fetcher.historical_volatility()
+        self.sigma = sigma if sigma else self.fetcher.historical_volatility()
 
         self.options = []
         self.strategy_name = ""
         self.total_price = 0
         self.total_market_price = 0
 
+    # helper for ease of option creation with same parameters 
     def create_option(self, option_type, strike_price, position='long'):
-        option = create_option(self.ticker, self.rf, self.expiry_date, strike_price, self.n, option_type, position, creation_date=self.creation_date)
+        option = create_option(self.ticker, self.rf, self.T, strike_price, self.n, option_type, position, creation_date=self.creation_date)
         itm_otm = ""
         percent_itm_otm = abs((strike_price - self.stock_price) / self.stock_price)
 
@@ -68,7 +71,7 @@ class OptionStrategy:
             print(f"Moneyness: {itm_otm}")
             print(f"Percent ITM/OTM: {percent_itm_otm*100:.2f}%")
 
-            option.summary()
+            print_option_summary(option)
 
         print()
 
@@ -102,17 +105,17 @@ class OptionStrategy:
         for option in self.options:
             if option.option_type != 'stock':
                 if option.position == 'long':
-                    delta += option.delta
-                    gamma += option.gamma
-                    theta += option.theta
-                    vega += option.vega
-                    rho += option.rho
+                    delta += option.greeks["delta"]
+                    gamma += option.greeks["gamma"]
+                    theta += option.greeks["theta"]
+                    vega += option.greeks["vega"]
+                    rho += option.greeks["rho"]
                 else:  # short position
-                    delta -= option.delta
-                    gamma -= option.gamma
-                    theta -= option.theta
-                    vega -= option.vega
-                    rho -= option.rho
+                    delta -= option.greeks["delta"]
+                    gamma -= option.greeks["gamma"]
+                    theta -= option.greeks["theta"]
+                    vega -= option.greeks["vega"]
+                    rho -= option.greeks["rho"]
             else:  # for stock
                 if option.position == 'long':
                     delta += 1
@@ -159,8 +162,8 @@ class OptionStrategy:
 
         break_even_points = []
         for i in range(1, len(stock_prices)):
-            if total_profit_loss[i - 1] * total_profit_loss[i] < 0:  # Check for sign change
-                # linear interpolation to find the exact break-even point
+            if total_profit_loss[i - 1] * total_profit_loss[i] < 0:  # sign change 
+                # linear interpolation 
                 x1, x2 = stock_prices[i - 1], stock_prices[i]
                 y1, y2 = total_profit_loss[i - 1], total_profit_loss[i]
                 break_even_point = x1 - y1 * (x2 - x1) / (y2 - y1)

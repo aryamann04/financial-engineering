@@ -6,7 +6,7 @@ from options.core.pricing.montecarlo import monte_carlo_digital
 from options.core.pricing.pricing import digital_option_bs_price
 
 class DigitalOption:
-    def __init__(self, ticker, r, T, K, option_type="call", payoff_amount=1, position="long", creation_date=None):
+    def __init__(self, ticker, r, T, K, sigma=None, option_type="call", payoff_amount=1, position="long", creation_date=None):
         self.ticker = ticker
         self.r = r
         self.T = T
@@ -16,9 +16,11 @@ class DigitalOption:
         self.creation_date = creation_date
         self.payoff_amount = payoff_amount
 
-        self.fetcher = MarketDataFetcher(ticker, creation_date)
-        self.S_0, self.sigma = self.fetcher.current_price_and_vol()
+        self.fetcher = MarketDataFetcher(ticker, T, creation_date)
+        self.S0 = self.fetcher.current_price()
+        self.sigma = sigma if sigma else self.fetcher.historical_volatility()
         self.q = self.fetcher.dividend_yield()
+
         self.bs_price = self.bs_price()
         self.mc_price = self.monte_carlo_price()
 

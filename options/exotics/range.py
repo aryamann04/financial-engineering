@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utilities.marketdata import MarketDataFetcher
+from options.utilities.marketdata import MarketDataFetcher
 from options.core.pricing.montecarlo import monte_carlo_range_accrual
 from options.core.pricing.pricing import single_period_range_accrual_bs_price
 
 class SinglePeriodRangeAccrual:
-    def __init__(self, ticker, r, T, K_low, K_up, coupon):
+    def __init__(self, ticker, r, T, K_low, K_up, coupon, sigma=None):
         self.ticker = ticker.upper()
         self.r = r
         self.T = T
@@ -14,9 +14,10 @@ class SinglePeriodRangeAccrual:
         self.K_up = float(K_up)
         self.coupon = float(coupon)
 
-        self.data = MarketDataFetcher(ticker)
-        self.S0, self.sigma = self.data.current_price_and_vol()
-        self.q = self.data.dividend_yield()
+        self.fetcher = MarketDataFetcher(ticker, T)
+        self.S0 = self.fetcher.current_price()
+        self.sigma = sigma if sigma else self.fetcher.historical_volatility()
+        self.q = self.fetcher.dividend_yield()
 
         self.black_scholes = self.black_scholes_range_price()
         self.monte_carlo = monte_carlo_range_accrual(self.S0, self.K_low, self.K_up, T, r, self.q, self.sigma, coupon)

@@ -2,24 +2,28 @@ import numpy as np
 from datetime import datetime
 from scipy.stats import norm
 
-from .pricing.pricing import binom_price
+from .pricing.pricing import bs_price, binom_price
 from .pricing.montecarlo import monte_carlo_european
 from options.utilities.marketdata import MarketDataFetcher
+from options.volatility.iv import iv
 
 class Option:
-    def __init__(self, ticker, r, T, K, n, option_type, sigma=None, q=None, creation_date=None):
+    def __init__(self, ticker, r, T, K, n, sigma=None, option_type="call", position="long", creation_date=None):
         self.ticker = ticker
         self.r = r
         self.T = T
         self.K = K
         self.n = n
+
         self.option_type = option_type.lower()
+        self.position = position 
         self.creation_date = creation_date
 
-        self.fetcher = MarketDataFetcher(ticker, creation_date)
+        self.fetcher = MarketDataFetcher(ticker, T, creation_date)
         self.S_0 = self.fetcher.current_price()
-        self.q = q if q else self.fetcher.dividend_yield()
+        self.q = self.fetcher.dividend_yield()
         self.sigma = sigma if sigma else self.fetcher.historical_volatility()
+        self.market_iv = self.fetcher.market_iv(K, T, option_type)
 
         self.greeks = self.calculate_greeks(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
 
@@ -31,6 +35,10 @@ class Option:
         prices["Monte Carlo"] = self.monte_carlo_price
         prices["Market Price"] = self.market
         return prices
+    
+    @property
+    def bs_price(self):
+        return bs_price(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
 
     @property
     def binom_european(self):
@@ -52,13 +60,12 @@ class Option:
         return np.nan
 
     @property
-    def implied_volatility(self):
-        actual_price = self.market
-        if actual_price and not np.isnan(actual_price):
-            return implied_volatility(actual_price, self.S_0, self.K, self.T, self.r, self.q, self.option_type)
+    def bs_iv(self):
+        if self.market and not np.isnan(self.market):
+            return iv(self.market, self.S_0, self.K, self.T, self.r, self.q, self.option_type)
         return "N/A"
     
-    def calculate_greeks(S, K, T, r, sigma, q, option_type):
+    def calculate_greeks(self, S, K, T, r, sigma, q, option_type):
         d1 = (np.log(S / K) + (r - q + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
         d2 = d1 - sigma * np.sqrt(T)
 
@@ -86,5 +93,6 @@ class Option:
 
         return greeks
 
+# helper for strategies
 def create_option(**kwargs):
     return Option(**kwargs)

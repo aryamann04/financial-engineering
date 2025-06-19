@@ -4,21 +4,28 @@ import numpy as np
 from datetime import datetime, timedelta
 
 class MarketDataFetcher:
-    def __init__(self, ticker):
+    def __init__(self, ticker, T, creation_date=None):
         self.ticker = ticker.upper()
         self._ticker_obj = yf.Ticker(self.ticker)
+        self.T = T
+        self.creation_date = pd.to_datetime(creation_date) if creation_date is not None else None
         self.close_prices = self.get_close_prices()
 
-    def get_close_prices(self, reference_date=None):
-        if reference_date is not None:
-            reference_date = pd.to_datetime(reference_date)
-            start_date = reference_date - pd.Timedelta(days=365)
-            hist = self._ticker_obj.history(start=start_date, end=reference_date)
+    def get_close_prices(self):
+        num_days = int(self.T * 365)  
+        
+        if self.creation_date is not None: 
+            end = self.creation_date
+            start = end - timedelta(days=num_days)  
         else:
-            hist = self._ticker_obj.history(period="1y")
+            # default option is created today 
+            end = datetime.today()
+            start = end - timedelta(days=num_days)
+        
+        hist = self._ticker_obj.history(start=start, end=end)
 
         if hist.empty:
-            raise ValueError(f"No data available for {self.ticker}.")
+            raise ValueError(f"No data available for {self.ticker} between {start} and {end}.")
 
         return hist['Close']
     
@@ -27,7 +34,7 @@ class MarketDataFetcher:
     
     def historical_volatility(self):
         log_returns = np.log(self.close_prices / self.close_prices.shift(1))
-        sigma = np.std(log_returns) * np.sqrt(252)
+        sigma = np.std(log_returns) * np.sqrt(int(self.T * 365))  # annualize
         return sigma
 
     def dividend_yield(self):
@@ -37,7 +44,8 @@ class MarketDataFetcher:
         except Exception:
             return 0
 
-    def implied_volatility(self, K, T, option_type="call"):
+    # yfinance implied volatility 
+    def market_iv(self, K, T, option_type="call"):
         K = 5 * round(K / 5)
         exp_dates = self._ticker_obj.options
         if not exp_dates:

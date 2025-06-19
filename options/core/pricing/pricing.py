@@ -1,8 +1,6 @@
 import numpy as np
 from scipy.stats import norm
 
-from options.exotics.digital import DigitalOption
-
 # European option Black-Scholes pricing 
 
 def bs_price(S, K, T, r, sigma, q=0, option_type="call"):
@@ -48,6 +46,9 @@ def digital_option_bs_price(S_0, K, T, r, q, sigma, option_type, payoff_amount):
 # Single period range accrual Black-Scholes pricing
 
 def single_period_range_accrual_bs_price(self):
+        # use digital options for convenience 
+        from options.exotics.digital import DigitalOption
         d_low = DigitalOption(self.ticker, self.r, self.T, self.K_low, option_type="call", payoff_amount=1)
         d_high = DigitalOption(self.ticker, self.r, self.T, self.K_up, option_type="call", payoff_amount=1)
+
         return self.coupon * (d_low.black_scholes_price() - d_high.black_scholes_price())
