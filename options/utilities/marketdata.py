@@ -42,7 +42,7 @@ class MarketDataFetcher:
 
     def dividend_yield(self):
         try:
-            yield_ = self.yfTicker.info.get('dividendYield', 0)
+            yield_ = self.yfTicker.info.get('dividendYield', 0) / 100
             return yield_ if yield_ is not None else 0
         except Exception:
             return 0

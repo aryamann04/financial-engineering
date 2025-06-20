@@ -27,11 +27,10 @@ def print_option_summary(option):
     print("\n********** VOLATILITY **********")
     vol_table = [
         ["Historical (Model Input)", f"{prices['Model Vol']*100:.2f}%"],
-        ["Market Implied Vol", f"{(prices['Implied Vol']*100 if prices['Implied Vol'] else 'N/A')}"]
+        ["Market Implied Vol", f"{(prices['Implied Vol']*100 if isinstance(prices['Implied Vol'], float) else 'N/A')}"]
     ]
     print(tabulate(vol_table, headers=["Type", "Value"], tablefmt="grid"))
 
     print("\n********** GREEKS **********")
-    greeks = option.greeks_dict()
-    greek_table = [[k, f"{v:.4f}"] for k, v in greeks.items()]
+    greek_table = [[k, f"{v:.4f}"] for k, v in option.greeks.items()]
     print(tabulate(greek_table, headers=["Greek", "Value"], tablefmt="grid"))

@@ -26,7 +26,8 @@ class Option:
 
         self.S_0 = self.fetcher.current_price()
         self.q = self.fetcher.dividend_yield()
-        self.sigma = sigma if sigma else self.fetcher.historical_volatility()
+        # self.sigma = sigma if sigma else self.fetcher.historical_volatility()
+        self.sigma = self.fetcher.historical_volatility() 
         self.market_iv = self.fetcher.market_iv(K, T, option_type)
 
         self.greeks = self.calculate_greeks(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
@@ -38,6 +39,11 @@ class Option:
         prices["Binomial American"] = self.binom_american
         prices["Monte Carlo"] = self.monte_carlo_price
         prices["Market Price"] = self.market
+
+        # placeholder
+        prices["Model Vol"] = self.sigma 
+        prices["Implied Vol"] = self.bs_iv
+
         return prices
 
     def summary(self): 
