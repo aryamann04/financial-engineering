@@ -1,3 +1,4 @@
+import numpy as np 
 from scipy.optimize import brentq
 import options.core.pricing.pricing as bs_price
 
