@@ -1,10 +1,14 @@
 import yfinance as yf
+from curl_cffi import requests 
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
 class MarketDataFetcher:
     def __init__(self, ticker, T, creation_date=None):
+
+        self.session = requests.Session(impersonate="chrome")
+        self.yfTicker = yf.Ticker(ticker, session=self.session)
         self.ticker = ticker.upper()
         self.T = T
         self.creation_date = pd.to_datetime(creation_date) if creation_date is not None else None
@@ -21,7 +25,7 @@ class MarketDataFetcher:
             end = datetime.today()
             start = end - timedelta(days=num_days)
         
-        hist = yf.Ticker(self.ticker).history(start=start, end=end)
+        hist = self.yfTicker.history(start=start, end=end)
 
         if hist.empty:
             raise ValueError(f"No data available for {self.ticker} between {start} and {end}.")
@@ -38,7 +42,7 @@ class MarketDataFetcher:
 
     def dividend_yield(self):
         try:
-            yield_ = yf.Ticker(self.ticker).info.get('dividendYield', 0)
+            yield_ = self.yfTicker.info.get('dividendYield', 0)
             return yield_ if yield_ is not None else 0
         except Exception:
             return 0
@@ -46,14 +50,14 @@ class MarketDataFetcher:
     # yfinance implied volatility 
     def market_iv(self, K, T, option_type="call"):
         K = 5 * round(K / 5)
-        exp_dates = yf.Ticker(self.ticker).options
+        exp_dates = self.yfTicker.options
         if not exp_dates:
             return None
 
         target_expiry = datetime.now() + timedelta(days=T * 365)
         closest_expiry = min(exp_dates, key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_expiry))
         try:
-            options = yf.Ticker(self.ticker).option_chain(closest_expiry)
+            options = self.yfTicker.option_chain(closest_expiry)
             option_df = options.calls if option_type == "call" else options.puts
             row = option_df[option_df['strike'] == K]
             return row['impliedVolatility'].values[0] if not row.empty else None
@@ -62,14 +66,14 @@ class MarketDataFetcher:
 
     def actual_option_price(self, K, T, option_type="call"):
         K = 5 * round(K / 5)
-        exp_dates = yf.Ticker(self.ticker).options
+        exp_dates = self.yfTicker.options
         if not exp_dates:
             return None, None
 
         target_expiry = datetime.now() + timedelta(days=T * 365)
         closest_expiry = min(exp_dates, key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_expiry))
         try:
-            options = yf.Ticker(self.ticker).option_chain(closest_expiry)
+            options = self.yfTicker.option_chain(closest_expiry)
             option_df = options.calls if option_type == "call" else options.puts
             row = option_df[option_df['strike'] == K]
             if not row.empty:
