@@ -10,10 +10,12 @@ def monte_carlo_european(S0, K, T, r, q, sigma, option_type='call', simulations=
         Z = np.random.standard_normal(simulations)
         S[:, t] = S[:, t - 1] * np.exp((r - q - 0.5 * sigma ** 2) * dt + sigma * np.sqrt(dt) * Z)
 
-    if option_type == 'call':
+    if option_type.lower() == "call":
         payoffs = np.maximum(S[:, -1] - K, 0)
-    elif option_type == 'put':
+    elif option_type.lower() == "put":
         payoffs = np.maximum(K - S[:, -1], 0)
+    elif option_type == "stock":
+        return None
     else:
         raise ValueError("Invalid option type. Must be 'call' or 'put'.")
 
@@ -29,9 +31,9 @@ def monte_carlo_digital(S0, K, T, r, q, sigma, option_type='call', simulations=1
         Z = np.random.standard_normal(simulations)
         S[:, t] = S[:, t - 1] * np.exp((r - q - 0.5 * sigma ** 2) * dt + sigma * np.sqrt(dt) * Z)
 
-    if option_type == 'call':
+    if option_type.lower() == 'call':
         payoffs = np.where(S[:, -1] > K, 1, 0)
-    elif option_type == 'put':
+    elif option_type.lower() == 'put':
         payoffs = np.where(S[:, -1] < K, 1, 0)
     else:
         raise ValueError("Invalid option type. Must be 'call' or 'put'.")
@@ -64,9 +66,9 @@ def monte_carlo_asian(S0, K, T, r, q, sigma, option_type='call', simulations=100
 
     S_avg = np.mean(S, axis=1)
 
-    if option_type == 'call':
+    if option_type.lower() == 'call':
         payoffs = np.maximum(S_avg - K, 0)
-    elif option_type == 'put':
+    elif option_type.lower() == 'put':
         payoffs = np.maximum(K - S_avg, 0)
     else:
         raise ValueError("Invalid option type. Must be 'call' or 'put'.")

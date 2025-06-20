@@ -107,5 +107,6 @@ class Option:
         return greeks
 
 # helper for strategies
-def create_option(**kwargs):
-    return Option(**kwargs)
+def create_option(ticker, r, T, K, n, sigma=None, option_type="call", position="long", 
+                 creation_date=None, fetcher=None):
+    return Option(ticker, r, T, K, n, sigma, option_type, position, creation_date, fetcher)
