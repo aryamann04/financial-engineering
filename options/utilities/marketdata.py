@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
+from options.volatility.marketvols import get_yf_iv, yf_option_price, plot_vol_skew
+
 class MarketDataFetcher:
     def __init__(self, ticker, T, creation_date=None):
 
@@ -22,7 +24,7 @@ class MarketDataFetcher:
             start = end - timedelta(days=num_days)  
         else:
             # default option is created today 
-            end = datetime.today()
+            end = datetime.today() 
             start = end - timedelta(days=num_days)
         
         hist = self.yfTicker.history(start=start, end=end)
@@ -49,35 +51,11 @@ class MarketDataFetcher:
 
     # yfinance implied volatility 
     def market_iv(self, K, T, option_type="call"):
-        K = 5 * round(K / 5)
-        exp_dates = self.yfTicker.options
-        if not exp_dates:
-            return None
-
-        target_expiry = datetime.now() + timedelta(days=T * 365)
-        closest_expiry = min(exp_dates, key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_expiry))
-        try:
-            options = self.yfTicker.option_chain(closest_expiry)
-            option_df = options.calls if option_type == "call" else options.puts
-            row = option_df[option_df['strike'] == K]
-            return row['impliedVolatility'].values[0] if not row.empty else None
-        except Exception:
-            return None
-
+        return get_yf_iv(self.yfTicker, K, T, option_type)
+    
+    # yfinance option price
     def actual_option_price(self, K, T, option_type="call"):
-        K = 5 * round(K / 5)
-        exp_dates = self.yfTicker.options
-        if not exp_dates:
-            return None, None
-
-        target_expiry = datetime.now() + timedelta(days=T * 365)
-        closest_expiry = min(exp_dates, key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_expiry))
-        try:
-            options = self.yfTicker.option_chain(closest_expiry)
-            option_df = options.calls if option_type == "call" else options.puts
-            row = option_df[option_df['strike'] == K]
-            if not row.empty:
-                return row['lastPrice'].values[0], closest_expiry
-            return None, closest_expiry
-        except Exception:
-            return None, closest_expiry
+        return yf_option_price(self.yfTicker, K, T, option_type)
+    
+    def plot_implied_vols(self, r=0): 
+        plot_vol_skew(self.yfTicker, self.current_price(), self.T, r, self.dividend_yield(), option_type="call")

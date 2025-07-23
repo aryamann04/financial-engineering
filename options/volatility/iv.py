@@ -10,7 +10,7 @@ def bs_iv(market, S_0, K, T, r, q, option_type="call"):
         return bs_price(S_0, K, T, r, sigma, q, option_type) - market
 
     try:
-        implied_vol = brentq(objective, 1e-6, 5.0)  # bounds for sigma
+        implied_vol = brentq(objective, 1e-6, 5.0)  
         return implied_vol
     except ValueError:
         return "N/A"

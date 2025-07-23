@@ -1,5 +1,4 @@
 import numpy as np
-from datetime import datetime
 from scipy.stats import norm
 
 from .pricing.pricing import bs_price, binom_price
@@ -77,6 +76,10 @@ class Option:
         if self.market and not np.isnan(self.market):
             return bs_iv(self.market, self.S_0, self.K, self.T, self.r, self.q, self.option_type)
         return "N/A"
+    
+    @property
+    def plot_implied_vols(self):
+        self.fetcher.plot_implied_vols(self.r)
     
     def calculate_greeks(self, S, K, T, r, sigma, q, option_type):
         d1 = (np.log(S / K) + (r - q + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
