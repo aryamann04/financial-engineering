@@ -49,10 +49,9 @@ def handle_equity_options():
         ticker = input("stock ticker: ").upper().strip()
         T = get_yrs()
         r = treasury_yield(T)
-        n = int(input("desired number of periods in the binomial model: "))
-        percent_itm_otm = float(input("percent in-the-money/out-the-money (e.g., 0.2): "))
+        n = max(int(input("desired number of periods in the binomial model: ")), 10)
 
-        strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
+        strategy = OptionStrategy(ticker, T, r, n)
         print("\noption strategies available:")
     
         strategies = [
@@ -83,7 +82,7 @@ def handle_equity_options():
 
     elif choice == '2': 
         print("\n----------------------------------------------")
-        print("\t\t\EXOTIC OPTIONS\t\t")
+        print("\t\tEXOTIC OPTIONS\t\t")
         print("----------------------------------------------")
         ticker = input("stock ticker: ").upper().strip()
         T = get_yrs()

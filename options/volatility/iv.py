@@ -26,7 +26,6 @@ def bs_iv_bq(market, S_0, K, T, r, q, option_type="call"):
                 return res.x
             return None
     except Exception as e:
-        print(f"Exception: {e}")
         return None
 
 # newton
@@ -43,7 +42,6 @@ def bs_iv(market, S_0, K, T, r, q, option_type="call"):
     intrinsic = max(S_0 * np.exp(-q * T) - K * np.exp(-r * T), 0)
     eps = 1e-11
     if market <= intrinsic:
-        print("market price <= instrinsic val")
         market = intrinsic + eps
 
     sigma = np.sqrt(2 * abs(np.log(S_0 / K)) / T) if market - intrinsic < 1 else np.sqrt(2 * np.pi / T * (market - intrinsic) / (S_0 + K))
@@ -65,7 +63,6 @@ def bs_iv(market, S_0, K, T, r, q, option_type="call"):
 
     # if insufficient convergence fall back on brentq
     sigma = bs_iv_bq(market, S_0, K, T, r, q, option_type)
-    print(f"[brentq] strike: {K}, market: {market}, sigma: {sigma}")
     return sigma
 
 

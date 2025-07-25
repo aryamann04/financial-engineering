@@ -87,7 +87,7 @@ class OptionStrategy:
         return option
 
     def strategy_price(self):
-        print(f"\n**************************************************")
+        print("\n----------------------------------------------------------")
         print(f"******************** STRATEGY ********************")
         print(f"{self.ticker} {self.strategy_name} expiring {self.exp}")
         print(f"**************************************************\n")
@@ -141,7 +141,7 @@ class OptionStrategy:
             ["rho", f"{rho:.4f}"]
         ]
         print(tabulate(greeks_table, headers=["Greek", "Value"], tablefmt="grid"))
-        print("\n**************************************************\n")
+        print("----------------------------------------------------------")
         return {"delta": delta, "gamma": gamma, "theta": theta, "vega": vega, "rho": rho}
 
     def visualize_payoff(self, market_price=False):
@@ -203,6 +203,7 @@ class OptionStrategy:
         return break_even_points
 
     def atm_call(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         call = self.create_option('call', self.S_0, 'long')
         self.options.append(call)
@@ -211,6 +212,7 @@ class OptionStrategy:
         return self.options
 
     def itm_call(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"ITM call strike (< {self.S_0:.2f}): ")
         call = self.create_option('call', K, 'long')
@@ -220,6 +222,7 @@ class OptionStrategy:
         return self.options
 
     def otm_call(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"OTM call strike (> {self.S_0:.2f}): ")
         call = self.create_option('call', K, 'long')
@@ -229,6 +232,7 @@ class OptionStrategy:
         return self.options
 
     def short_atm_call(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         call = self.create_option('call', self.S_0, 'short')
         self.options.append(call)
@@ -237,6 +241,7 @@ class OptionStrategy:
         return self.options
 
     def short_itm_call(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"ITM call strike (< {self.S_0:.2f}): ")
         call = self.create_option('call', K, 'short')
@@ -246,6 +251,7 @@ class OptionStrategy:
         return self.options
 
     def short_otm_call(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"OTM call strike (> {self.S_0:.2f}): ")
         call = self.create_option('call', K, 'short')
@@ -255,6 +261,7 @@ class OptionStrategy:
         return self.options
 
     def atm_put(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         put = self.create_option('put', self.S_0, 'long')
         self.options.append(put)
@@ -263,6 +270,7 @@ class OptionStrategy:
         return self.options
 
     def itm_put(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"ITM put strike (> {self.S_0:.2f}): ")
         put = self.create_option('put', K, 'long')
@@ -272,6 +280,7 @@ class OptionStrategy:
         return self.options
 
     def otm_put(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"OTM put strike (< {self.S_0:.2f}): ")
         put = self.create_option('put', K, 'long')
@@ -281,6 +290,7 @@ class OptionStrategy:
         return self.options
 
     def short_atm_put(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         put = self.create_option('put', self.S_0, 'short')
         self.options.append(put)
@@ -289,6 +299,7 @@ class OptionStrategy:
         return self.options
 
     def short_itm_put(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"ITM put strike (> {self.S_0:.2f}): ")
         put = self.create_option('put', K, 'short')
@@ -298,6 +309,7 @@ class OptionStrategy:
         return self.options
 
     def short_otm_put(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"OTM put strike (< {self.S_0:.2f}): ")
         put = self.create_option('put', K, 'short')
@@ -307,6 +319,7 @@ class OptionStrategy:
         return self.options
 
     def covered_call(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"covered call strike (> {self.S_0:.2f}): ")
         call = self.create_option('call', K, 'short')
@@ -319,6 +332,7 @@ class OptionStrategy:
         return self.options
 
     def married_put(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = input(f"married put strike (< {self.S_0:.2f}): ")
         put = self.create_option('put', K, 'long')
@@ -331,6 +345,7 @@ class OptionStrategy:
         return self.options
 
     def bull_call_spread(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K1 = input(f"[bull call spread] lower strike (< {self.S_0:.2f}): ")
         call1 = self.create_option('call', K1, 'long')
@@ -344,6 +359,7 @@ class OptionStrategy:
         return self.options
 
     def bear_put_spread(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K1 = input(f"[bear put spread] upper strike (> {self.S_0:.2f}): ")
         put1 = self.create_option('put', K1, 'long')
@@ -357,6 +373,7 @@ class OptionStrategy:
         return self.options
 
     def credit_call_spread(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K1 = input(f"[credit call spread] upper strike (> {self.S_0:.2f}): ")
         call1 = self.create_option('call', K1, 'long')
@@ -370,6 +387,7 @@ class OptionStrategy:
         return self.options
 
     def credit_put_spread(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K1 = input(f"[credit put spread] lower strike (< {self.S_0:.2f}): ")
         put1 = self.create_option('put', K1, 'long')
@@ -383,6 +401,7 @@ class OptionStrategy:
         return self.options
 
     def protective_collar(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K1 = input(f"[protective collar] OTM put strike (< {self.S_0:.2f}): ")
         put = self.create_option('put', K1, 'long')
@@ -396,6 +415,7 @@ class OptionStrategy:
         return self.options
 
     def long_straddle(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = float(input(f"[long straddle] straddle strike: "))
         call = self.create_option('call', K, 'long')
@@ -406,6 +426,7 @@ class OptionStrategy:
         return self.options
 
     def long_strangle(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         Kp = float(input(f"[long strangle] OTM put strike (< {self.S_0:.2f}): "))
         Kc = float(input(f"[long strangle] OTM call strike (> {self.S_0:.2f}): "))
@@ -417,6 +438,7 @@ class OptionStrategy:
         return self.options
 
     def short_straddle(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K = float(input(f"[short straddle] straddle strike: "))
         call = self.create_option('call', K, 'short')
@@ -427,6 +449,7 @@ class OptionStrategy:
         return self.options
 
     def short_strangle(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         Kp = float(input(f"[short strangle] OTM put strike (< {self.S_0:.2f}): "))
         Kc = float(input(f"[short strangle] OTM call strike (> {self.S_0:.2f}): "))
@@ -438,6 +461,7 @@ class OptionStrategy:
         return self.options
 
     def long_call_butterfly_spread(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K1 = float(input(f"[butterfly] low strike (long call): "))
         K2 = float(input(f"[butterfly] mid strike (short 2×): "))
@@ -452,6 +476,7 @@ class OptionStrategy:
         return self.options
 
     def short_call_butterfly_spread(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         K1 = float(input(f"[short butterfly] low strike (short call): "))
         K2 = float(input(f"[short butterfly] mid strike (long 2×): "))
@@ -466,6 +491,7 @@ class OptionStrategy:
         return self.options
 
     def iron_condor(self):
+        print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
         Kp1 = float(input(f"[iron condor] long put strike (lowest): "))
         Kp2 = float(input(f"[iron condor] short put strike: "))
