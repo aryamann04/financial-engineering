@@ -1,17 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from tabulate import tabulate
+from datetime import datetime
 
 from options.core.option import create_option
 from options.utilities.marketdata import MarketDataFetcher
 from options.utilities.printer import print_option_summary
+from options.volatility.marketvols import closest_K_T
 
 class OptionStrategy:
-    def __init__(self, ticker, percent_otm_itm, T, rf, sigma=None, n=100, creation_date=None):
+    def __init__(self, ticker, T, rf, sigma=None, n=100, creation_date=None):
         self.ticker = ticker
 
-        self.percent_otm_itm = percent_otm_itm
-        self.T = T
+        _, self.exp = closest_K_T(ticker, 0, T) if isinstance(T, (int, float)) else (_, T)
+        self.T = (datetime.strptime(self.exp, "%Y-%m-%d") - datetime.today()).days / 365.0 if isinstance(self.exp, str) else T
+        
         self.rf = rf
         self.n = n
         self.creation_date = creation_date
@@ -86,7 +89,7 @@ class OptionStrategy:
     def strategy_price(self):
         print(f"\n**************************************************")
         print(f"******************** STRATEGY ********************")
-        print(f"{self.ticker} {self.percent_otm_itm*100}% {self.strategy_name}")
+        print(f"{self.ticker} {self.strategy_name}")
         print(f"**************************************************\n")
         self.total_price = sum(option.bs_price if option.position == 'long' else -option.bs_price for option in self.options)
         self.total_market_price = sum(
@@ -193,7 +196,7 @@ class OptionStrategy:
 
         plt.xlabel('stock price')
         plt.ylabel('profit/loss')
-        plt.title(f'{self.ticker} {self.percent_otm_itm * 100}% {self.strategy_name} PnL diagram')
+        plt.title(f'{self.ticker} {self.strategy_name} PnL diagram')
         plt.legend()
         plt.show()
 
@@ -457,7 +460,7 @@ class OptionStrategy:
         c2a = self.create_option('call', K2, 'long')
         c2b = self.create_option('call', K2, 'long')
         c3 = self.create_option('call', K3, 'short')
-        
+
         self.options.extend([c1, c2a, c2b, c3])
         self.strategy_name = "Short Call Butterfly Spread"
         return self.options

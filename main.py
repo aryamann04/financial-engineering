@@ -1,4 +1,6 @@
 import datetime
+import warnings
+warnings.filterwarnings("ignore")
 
 from options.core.option import Option
 from options.core.strategy import OptionStrategy
@@ -12,9 +14,6 @@ from fixed_income.derivatives.zcb_option import ZeroCouponBondOption
 from fixed_income.derivatives.caplet import Caplet
 from fixed_income.derivatives.floorlet import Floorlet
 from fixed_income.core.marketyields import treasury_yield, plot_yield_curve
-
-import warnings
-warnings.filterwarnings("ignore")
 
 def main():
     while True:
