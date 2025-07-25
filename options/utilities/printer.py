@@ -26,12 +26,15 @@ def print_option_summary(option):
 
     print("\n********** VOLATILITY **********")
     vol_table = [
-        ["Historical (Model Input)", f"{prices['Model Vol']*100:.2f}%"],
-        ["Market Implied Vol (via Black-Scholes)", f"{(prices['Implied Vol']*100 if isinstance(prices['Implied Vol'], float) else 'N/A')}"], 
-        ["Market Implied Vol (via yfinance)", f"{(prices['Implied Vol (yf)']*100 if isinstance(prices['Implied Vol (yf)'], float) else 'N/A')}"]
-    ]
+        ["Historical (Model Input)", fmt_pct(prices['Model Vol'])],
+        ["Market Implied Vol (via BS)", fmt_pct(prices['Implied Vol'])],
+        ["Market Implied Vol (via yfinance)", fmt_pct(prices['Implied Vol (yf)'])],
+    ]   
     print(tabulate(vol_table, headers=["Type", "Value"], tablefmt="grid"))
 
     print("\n********** GREEKS **********")
     greek_table = [[k, f"{v:.4f}"] for k, v in option.greeks.items()]
     print(tabulate(greek_table, headers=["Greek", "Value"], tablefmt="grid"))
+
+def fmt_pct(x):
+    return f"{x*100:.2f}%" if isinstance(x, (int, float)) else "N/A"

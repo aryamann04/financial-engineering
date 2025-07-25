@@ -13,6 +13,9 @@ from fixed_income.derivatives.caplet import Caplet
 from fixed_income.derivatives.floorlet import Floorlet
 from fixed_income.core.marketyields import treasury_yield, plot_yield_curve
 
+import warnings
+warnings.filterwarnings("ignore")
+
 def main():
     while True:
         print("\n------------------------------------")

@@ -1,19 +1,27 @@
 import numpy as np
+from datetime import datetime
 from scipy.stats import norm
 
 from .pricing.pricing import bs_price, binom_price
 from .pricing.montecarlo import monte_carlo_european
 from options.utilities.marketdata import MarketDataFetcher
 from options.volatility.iv import bs_iv
+from options.volatility.marketvols import closest_K_T
 from options.utilities.printer import print_option_summary
 
 class Option:
     def __init__(self, ticker, r, T, K, n, sigma=None, option_type="call", position="long", 
-                 creation_date=None, fetcher=None):
+                 creation_date=None, fetcher=None, market_match=True):
         self.ticker = ticker
         self.r = r
-        self.T = T
-        self.K = K
+
+        if market_match:
+            self.K, exp = closest_K_T(ticker, K, T) if isinstance(K, (int, float)) and isinstance(T, (int, float)) else (K, T)
+            self.T = (datetime.strptime(exp, "%Y-%m-%d") - datetime.today()).days / 365.0 if isinstance(exp, str) else T
+        else:
+            self.K = K
+            self.T = T
+        
         self.n = n
 
         self.option_type = option_type.lower()
@@ -112,5 +120,5 @@ class Option:
 
 # helper for strategies
 def create_option(ticker, r, T, K, n, sigma=None, option_type="call", position="long", 
-                 creation_date=None, fetcher=None):
-    return Option(ticker, r, T, K, n, sigma, option_type, position, creation_date, fetcher)
+                 creation_date=None, fetcher=None, market_match=True):
+    return Option(ticker, r, T, K, n, sigma, option_type, position, creation_date, fetcher, market_match)
