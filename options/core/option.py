@@ -42,6 +42,7 @@ class Option:
         # placeholder
         prices["Model Vol"] = self.sigma 
         prices["Implied Vol"] = self.bs_iv
+        prices["Implied Vol (yf)"] = self.market_iv
 
         return prices
 

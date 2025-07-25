@@ -7,18 +7,21 @@ from options.exotics.digital import DigitalOption
 from options.exotics.range import SinglePeriodRangeAccrual
 
 from fixed_income.core.bond import Bond
-from fixed_income.core.zcb import ZeroCouponBond, ZeroCouponBondOption
+from fixed_income.core.zcb import ZeroCouponBond
+from fixed_income.derivatives.zcb_option import ZeroCouponBondOption
 from fixed_income.derivatives.caplet import Caplet
 from fixed_income.derivatives.floorlet import Floorlet
 from fixed_income.core.marketyields import treasury_yield, plot_yield_curve
 
 def main():
     while True:
-        print("\nWhat would you like to price?")
-        print("1. Equity Options")
-        print("2. Fixed Income")
-        print("3. Exit")
-        choice = input("Select an option (1-3): ")
+        print("\n------------------------------------")
+        print("\t\tMENU\t\t")
+        print("------------------------------------")
+        print("1. equity options")
+        print("2. fixed income")
+        print("3. exit")
+        choice = input("enter selection (1-3): ")
         
         if choice == '1':
             handle_equity_options()
@@ -28,132 +31,147 @@ def main():
             print("exit")
             break
         else:
-            print("Invalid choice. Please select 1, 2, or 3.")
+            print("invalid choice: must be 1, 2, or 3.")
 
 def handle_equity_options():
-    print("\nEquity Options Selected.")
-    choice = input("Enter 1 for option strategy/exotics, 2 for single option: ")
+    print("\n----------------------------------------------")
+    print("\t\tEQUITY OPTIONS\t\t")
+    print("----------------------------------------------")
+
+    choice = input("enter 1 for vanilla options, 2 for exotics: ")
 
     if choice == '1':
-        ticker = input("Enter the stock ticker: ")
-        T = float(input("Enter time to maturity (in years): "))
+        print("\n-----------------------------------------------")
+        print("\t\tVANILLA OPTIONS\t\t")
+        print("-----------------------------------------------")
+        ticker = input("stock ticker: ").upper().strip()
+        T = get_yrs()
         r = treasury_yield(T)
-        n = int(input("Enter the number of periods in the binomial model: "))
-        percent_itm_otm = float(input("Enter the percent in-the-money/out-the-money (e.g., 0.2): "))
-        exotic = input("Do you want an exotic option? (yes/no): ").strip().lower()
+        n = int(input("desired number of periods in the binomial model: "))
+        percent_itm_otm = float(input("percent in-the-money/out-the-money (e.g., 0.2): "))
 
-        if exotic == "yes":
-            print("\nAvailable Exotic Options:")
-            exotic_strategies = [
-                "Digital Call Option",
-                "Single Period Range Accrual",
-                "Asian Call Option"
-            ]
-        
-            for i, strat in enumerate(exotic_strategies, 1):
-                print(f"{i}. {strat}")
-        
-            exotic_choice = int(input(f"Select an exotic option (1-{len(exotic_strategies)}) : "))
+        strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
+        print("\noption strategies available:")
+    
+        strategies = [
+            "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
+            "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
+            "covered_call", "married_put", "bull_call_spread", "bear_put_spread", "credit_call_spread", 
+            "credit_put_spread", "protective_collar", "long_straddle", "long_strangle", "short_straddle", 
+            "short_strangle", "long_call_butterfly_spread", "short_call_butterfly_spread", "iron_condor"
+        ]
+        for i, strat in enumerate(strategies, 1):
+            print(f"{i}. {strat}")
+        strat_choice = int(input("select a strategy (1-{}) : ".format(len(strategies))))
 
-            if exotic_choice == 1:  # digital call 
+        if 1 <= strat_choice <= len(strategies):
+            selected_strategy = strategies[strat_choice - 1]
+            getattr(strategy, selected_strategy)()
+            strategy.strategy_price()
+            strategy.greeks()
+            strategy.visualize_payoff(False)
+        else:
+            print("invalid choice: must be between 1 and {}".format(len(strategies)))
+            return
+        
+        plotskew = input(f"plot vol skew for {ticker} (yes/no)? ").strip().lower()
+        if plotskew == 'yes':
+            option = Option(ticker, r, T, 0, n, option_type='call')
+            option.plot_implied_vols()
+
+    elif choice == '2': 
+        print("\n----------------------------------------------")
+        print("\t\t\EXOTIC OPTIONS\t\t")
+        print("----------------------------------------------")
+        ticker = input("stock ticker: ").upper().strip()
+        T = get_yrs()
+        r = treasury_yield(T)
+        
+        print("\navailable exotics:")
+        exotic_strategies = [
+            "digital option",
+            "single period range accrual",
+            "asian call option"
+        ]
+    
+        for i, strat in enumerate(exotic_strategies, 1):
+            print(f"{i}. {strat}")
+    
+        exotic_choice = int(input(f"select an exotic (1-{len(exotic_strategies)}) : "))
+
+        if exotic_choice == 1:  
+            print("\n**** DIGITAL OPTION ****")
+            option_type = input("enter option type (call/put): ").strip().lower()
+            if option_type not in ["call", "put"]:
+                print("invalid option type: must be 'call' or 'put', using call as defualt")
+                option_type = 'call'
+            else: 
                 digital_option_strike = 250
-                option_type = "call"
                 payoff_amount = 1
 
                 digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type, payoff_amount)
                 digital_call_option.price()
                 digital_call_option.visualize_payoff()
 
-            elif exotic_choice == 2:  # single-period range accrual 
-                ra_strike_low = input("Enter low strike price: ")
-                ra_strike_high = input("Enter high strike price: ")
+        elif exotic_choice == 2:  
+            print("\n**** SINGLE-PERIOD RANGE ACCRUAL ****")
+            ra_strike_low = input("low strike: ")
+            ra_strike_high = input("high strike: ")
 
-                single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
-                single_period_range_accrual.price()
-                single_period_range_accrual.visualize_payoff()
+            single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
+            single_period_range_accrual.price()
+            single_period_range_accrual.visualize_payoff()
 
-            elif exotic_choice == 3:  # asian call option  
-                asian_option_strike = input("Enter strike price: ")
+        elif exotic_choice == 3: 
+            print("\n**** ASIAN OPTION ****")
+            asian_option_strike = input("strike:  ")
 
-                asian_call_option = AsianOption(ticker, r, T, asian_option_strike)
-                asian_call_option.price()
-
-            else:
-                print("Invalid choice. Please restart and select a valid option.")
+            asian_call_option = AsianOption(ticker, r, T, asian_option_strike)
+            asian_call_option.price()
 
         else:
-            strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
-            print("\nAvailable Standard Option Strategies:")
-        
-            strategies = [
-                "atm_call", "itm_call", "otm_call", "short_atm_call", "short_itm_call", "short_otm_call",
-                "atm_put", "itm_put", "otm_put", "short_atm_put", "short_itm_put", "short_otm_put",
-                "covered_call", "married_put", "bull_call_spread", "bear_put_spread", "credit_call_spread", 
-                "credit_put_spread", "protective_collar", "long_straddle", "long_strangle", "short_straddle", 
-                "short_strangle", "long_call_butterfly_spread", "short_call_butterfly_spread", "iron_condor"
-            ]
-            for i, strat in enumerate(strategies, 1):
-                print(f"{i}. {strat}")
-            strat_choice = int(input("Select a strategy (1-{}) : ".format(len(strategies))))
-
-            if 1 <= strat_choice <= len(strategies):
-                selected_strategy = strategies[strat_choice - 1]
-                getattr(strategy, selected_strategy)()
-                strategy.strategy_price()
-                strategy.greeks()
-                strategy.visualize_payoff(False)
-
-                plotskew = input(f"Plot vol skew for {ticker} (yes/no)? ").strip().lower()
-                if plotskew == 'yes':
-                    option.plot_vol_skew()
-            else:
-                print("Invalid choice. Returning to main menu.")
-    elif choice == '2': 
-        ticker = input("Enter the stock ticker: ")
-        K = float(input("Enter the strike price: "))
-        T = float(input("Enter time to maturity (in years): "))
-        option_type = input("Enter option type (call/put): ")
-        r = treasury_yield(T)
-        n = int(input("Enter the number of periods in the binomial model: "))
-
-        option = Option(ticker, r, T, K, n, option_type)
-        option.summary()
-        
-        plotskew = input(f"Plot vol skew for {ticker} (yes/no)? ").strip().lower()
-        if plotskew == 'yes':
-            option.plot_vol_skew()
+            print("invalid choice: must be between 1 and {}".format(len(exotic_strategies)))
         
     else:
-        print("Invalid choice. Returning to main menu.")
+        print("invalid choice: returning to menu.")
 
 def handle_fixed_income():
-    print("\nFixed Income Selected.")
-    print("1. Zero Coupon Bond")
-    print("2. Option on Zero Coupon Bond")
-    print("3. Caplet/Floorlet")
-    print("4. Plot Yield Curve")
-    choice = input("Select an option (1-4): ")
+    print("\n----------------------------------------------")
+    print("\t\tFIXED INCOME\t\t")
+    print("----------------------------------------------")
+    print("1. zero coupon bond")
+    print("2. option on zero coupon bond")
+    print("3. caplet")
+    print("4. floorlet")
+    print("5. plot the current yield curve")
+    choice = input("select an option (1-5): ")
     
     if choice == '1':
-        face_value = float(input("Enter face value: "))
-        T = float(input("Enter maturity (years): "))
-        r_0 = float(input("Enter initial interest rate: "))
-        u = float(input("Enter up-factor: "))
-        d = float(input("Enter down-factor: "))
+        print("\n**** ZERO COUPON BOND ****")
+        face_value = float(input("face value: "))
+        T = float(input("maturity (years): "))
+        r_0 = float(input("initial interest rate: "))
+        u = float(input("up-factor (u): "))
+        d = float(input("down-factor (d): "))
         
+        if not (0 < d < 1 + r_0 < u): 
+            print("invalid: we require 0 < d < 1 + r_0 < u")
+            return
+
         zcb = ZeroCouponBond(face_value, T, r_0, u, d)
         zcb.price()
         zcb.print_bond_tree()
         zcb.print_interest_tree()
     
     elif choice == '2':
-        face_value = float(input("Enter face value of bond: "))
-        n = float(input("Enter maturity of bond (integer): "))
-        r_0 = float(input("Enter initial interest rate: "))
-        u = float(input("Enter up-factor: "))
-        d = float(input("Enter down-factor: "))
-        zcb_option_expiry = float(input("Enter option expiry (years): "))
-        zcb_option_strike = float(input("Enter option strike price: "))
+        print("\n**** OPTION ON ZERO COUPON BOND ****")
+        face_value = float(input("face value of underlying zero coupon bond: "))
+        n = float(input("maturity of bond (integer years): "))
+        r_0 = float(input("initial interest rate: "))
+        u = float(input("up-factor (u): "))
+        d = float(input("down-factor (d): "))
+        zcb_option_expiry = float(input("option expiry (years): "))
+        zcb_option_strike = float(input("enter option strike price: "))
         
         zcb = ZeroCouponBond(face_value, n, r_0, u, d)
         option = ZeroCouponBondOption(zcb, zcb_option_strike, zcb_option_expiry)
@@ -161,13 +179,16 @@ def handle_fixed_income():
         option.print_option_tree()
     
     elif choice == '3':
-        cf_expiry = int(input("Enter expiry (years): "))
-        cf_notional = float(input("Enter notional amount: "))
-        caplet_strike = float(input("Enter caplet strike rate: "))
-        floorlet_strike = float(input("Enter floorlet strike rate: "))
-        r_0 = float(input("Enter initial interest rate: "))
-        u = float(input("Enter up-factor: "))
-        d = float(input("Enter down-factor: "))
+        cf_expiry = int(input("expiry (years): "))
+        cf_notional = float(input("notional amount: "))
+        caplet_strike = float(input("strike rate: "))
+        r_0 = float(input("initial interest rate: "))
+        u = float(input("up-factor (u): "))
+        d = float(input("down-factor (d): "))
+
+        if not (0 < d < 1 + r_0 < u):
+            print("invalid: we require 0 < d < 1 + r_0 < u")
+            return
         
         caplet = Caplet(r_0, caplet_strike, cf_expiry, u, d, cf_notional)
         caplet.price()
@@ -178,13 +199,42 @@ def handle_fixed_income():
         floorlet.price()
         floorlet.print_floorlet_tree()
         floorlet.print_interest_tree()
-    
+
     elif choice == '4':
-        print(f"Plotting yield curve... (Date: {datetime.datetime.today().strftime('%Y-%m-%d')})")
+        cf_expiry = int(input("expiry (years): "))
+        cf_notional = float(input("notional amount: "))
+        floorlet_strike = float(input("strike rate: "))
+        r_0 = float(input("initial interest rate: "))
+        u = float(input("up-factor (u): "))
+        d = float(input("down-factor (d): "))
+
+        if not (0 < d < 1 + r_0 < u): 
+            print("invalid: we require 0 < d < 1 + r_0 < u")
+            return
+
+        floorlet = Floorlet(r_0, floorlet_strike, cf_expiry, u, d, cf_notional)
+        floorlet.price()
+        floorlet.print_floorlet_tree()
+        floorlet.print_interest_tree()
+    
+    elif choice == '5':
+        print(f"plotting yield curve... (date: {datetime.datetime.today().strftime('%Y-%m-%d')})")
         plot_yield_curve()
     
     else:
-        print("Invalid choice. Returning to main menu.")
+        print("invalid choice: returning to menu")
 
+def get_yrs(): 
+    T = input("maturity (enter with trailing 'y', 'm', or 'd', e.g. 10y, 1m, 5d, etc.): ").strip().lower()
+    if T.endswith('y'):
+        return float(T[:-1])
+    elif T.endswith('m'):
+        return float(T[:-1]) / 12
+    elif T.endswith('d'):
+        return float(T[:-1]) / 365
+    else:
+        print("invalid: use 'y', 'm', or 'd', try again")
+        return get_yrs()
+    
 if __name__ == "__main__":
     main()
