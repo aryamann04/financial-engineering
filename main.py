@@ -102,6 +102,10 @@ def handle_equity_options():
                 strategy.strategy_price()
                 strategy.greeks()
                 strategy.visualize_payoff(False)
+
+                plotskew = input(f"Plot vol skew for {ticker} (yes/no)? ").strip().lower()
+                if plotskew == 'yes':
+                    option.plot_vol_skew()
             else:
                 print("Invalid choice. Returning to main menu.")
     elif choice == '2': 
@@ -114,6 +118,11 @@ def handle_equity_options():
 
         option = Option(ticker, r, T, K, n, option_type)
         option.summary()
+        
+        plotskew = input(f"Plot vol skew for {ticker} (yes/no)? ").strip().lower()
+        if plotskew == 'yes':
+            option.plot_vol_skew()
+        
     else:
         print("Invalid choice. Returning to main menu.")
 

@@ -1,29 +1,39 @@
-import yfinance as yf
+import numpy as np
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
 from options.volatility.iv import bs_iv
 
 def yf_option_price(ticker_obj, K, T, option_type="call"):
-        K = 5 * round(K / 5)
-        exp_dates = ticker_obj.options
-        if not exp_dates:
-            return None, None
+    exp_dates = ticker_obj.options
+    if not exp_dates:
+        return None, None
 
-        target_expiry = datetime.now() + timedelta(days=T * 365)
-        closest_expiry = min(exp_dates, key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_expiry))
-        try:
-            options = ticker_obj.option_chain(closest_expiry)
-            option_df = options.calls if option_type == "call" else options.puts
-            row = option_df[option_df['strike'] == K]
-            if not row.empty:
-                return row['lastPrice'].values[0], closest_expiry
+    target_expiry = datetime.now() + timedelta(days=T * 365)
+    try:
+        closest_expiry = min(
+            exp_dates,
+            key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_expiry)
+        )
+
+        options = ticker_obj.option_chain(closest_expiry)
+        option_df = options.calls if option_type == "call" else options.puts
+
+        available_strikes = option_df['strike'].values
+        if len(available_strikes) == 0:
             return None, closest_expiry
-        except Exception:
-            return None, closest_expiry
+
+        closest_strike = min(available_strikes, key=lambda s: abs(s - K))
+        row = option_df[option_df['strike'] == closest_strike]
+
+        if not row.empty:
+            return row['lastPrice'].values[0], closest_expiry
+        return None, closest_expiry
+
+    except Exception:
+        return None, None
 
 def get_yf_iv(tic, K, T, option_type):
-    K = 5 * round(K / 5)
     exp_dates = tic.options
     if not exp_dates:
         return None
@@ -33,7 +43,11 @@ def get_yf_iv(tic, K, T, option_type):
     try:
         options = tic.option_chain(closest_expiry)
         option_df = options.calls if option_type == "call" else options.puts
-        row = option_df[option_df['strike'] == K]
+
+        available_strikes = option_df['strike'].values
+        closest_strike = min(available_strikes, key=lambda s: abs(s - K))
+        row = option_df[option_df['strike'] == closest_strike]
+
         return row['impliedVolatility'].values[0] if not row.empty else None
     except Exception:
         return None
@@ -90,25 +104,23 @@ def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call"):
     for i in range(len(strikes)):
         if implied_vols_yf[i] != 0:
             filtered_strikes_yf.append(strikes[i])
-            filtered_vols_yf.append(implied_vols_yf[i])
-        elif filtered_vols_yf:
-            filtered_strikes_yf.append(None)
-            filtered_vols_yf.append(None)
+            filtered_vols_yf.append(implied_vols_yf[i] * 100)
 
     # bs implied vols 
 
     implied_vols_bs = []
     filtered_strikes_bs = []
     for strike in strikes: 
-        yf_price = yf_option_price(ticker_obj, strike, T, 'call')
+        yf_price, _ = yf_option_price(ticker_obj, strike, T, 'call')
         if yf_price is None:
-            filtered_strikes_bs.append(None)
-            implied_vols_bs.append(None)
+            pass
         else:
-            filtered_strikes_bs.append(strike)
-            implied_vols_bs.append(bs_iv(yf_price, S_0, strike, T, r, q, option_type) * 100)
+            iv = bs_iv(yf_price, S_0, strike, T, r, q, option_type)
+            if iv is not None and not np.isnan(iv):
+                filtered_strikes_bs.append(strike)
+                implied_vols_bs.append(iv * 100)
 
-    ax = plt.subplots()
+    _, ax = plt.subplots()
     ax.plot(filtered_strikes_yf, filtered_vols_yf, label='YFinance Implied Vol', marker='o', linestyle='-', color="blue")
     ax.plot(filtered_strikes_bs, implied_vols_bs, label='BS Implied Vol', marker='o', linestyle='--', color="orange")
     

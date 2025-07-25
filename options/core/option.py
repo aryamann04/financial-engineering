@@ -75,7 +75,7 @@ class Option:
     def bs_iv(self):
         if self.market and not np.isnan(self.market):
             return bs_iv(self.market, self.S_0, self.K, self.T, self.r, self.q, self.option_type)
-        return "N/A"
+        return None
     
     @property
     def plot_implied_vols(self):
