@@ -14,7 +14,7 @@ class OptionStrategy:
 
         _, self.exp = closest_K_T(ticker, 0, T) if isinstance(T, (int, float)) else (_, T)
         self.T = (datetime.strptime(self.exp, "%Y-%m-%d") - datetime.today()).days / 365.0 if isinstance(self.exp, str) else T
-        
+
         self.rf = rf
         self.n = n
         self.creation_date = creation_date
@@ -89,7 +89,7 @@ class OptionStrategy:
     def strategy_price(self):
         print(f"\n**************************************************")
         print(f"******************** STRATEGY ********************")
-        print(f"{self.ticker} {self.strategy_name}")
+        print(f"{self.ticker} {self.strategy_name} expiring {self.exp}")
         print(f"**************************************************\n")
         self.total_price = sum(option.bs_price if option.position == 'long' else -option.bs_price for option in self.options)
         self.total_market_price = sum(
