@@ -3,7 +3,7 @@ from scipy.optimize import brentq, minimize_scalar
 from scipy.stats import norm 
 from options.core.pricing.pricing import bs_price
 
-def bs_iv_brentq(market, S_0, K, T, r, q, option_type="call"): 
+def bs_iv_bq(market, S_0, K, T, r, q, option_type="call"): 
     if market is None or np.isnan(market) or T <= 0:
         return None
 
@@ -11,10 +11,13 @@ def bs_iv_brentq(market, S_0, K, T, r, q, option_type="call"):
         return bs_price(S_0, K, T, r, sigma, q, option_type) - market
 
     def loss(sigma):
-        return abs(objective(sigma))
+        return objective(sigma) ** 2
 
     try:
-        low, high = 1e-6, 50
+        initial = np.sqrt(2 * np.pi / T) * market / S_0
+        low = max(1e-6, initial * 0.5)
+        high = min(5.0, initial * 3.0)
+
         if objective(low) * objective(high) < 0:
             return brentq(objective, low, high)
         else:
@@ -26,7 +29,7 @@ def bs_iv_brentq(market, S_0, K, T, r, q, option_type="call"):
         print(f"Exception: {e}")
         return None
 
-
+# newton
 def bs_iv(market, S_0, K, T, r, q, option_type="call"):
     if market is None or np.isnan(market) or T <= 0:
         return None
@@ -37,16 +40,15 @@ def bs_iv(market, S_0, K, T, r, q, option_type="call"):
         d1 = (np.log(S_0 / K) + (r - q + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
         return S_0 * np.exp(-q * T) * norm.pdf(d1) * np.sqrt(T)
 
-    intrinsic = max(S_0 - K, 0) if option_type == 'call' else max(K - S_0, 0)
+    intrinsic = max(S_0 * np.exp(-q * T) - K * np.exp(-r * T), 0)
+    eps = 1e-11
     if market <= intrinsic:
-        return None
+        print("market price <= instrinsic val")
+        market = intrinsic + eps
 
-    try:
-        sigma = np.sqrt((2 * np.pi / T) * (market - intrinsic) / (S_0 + K))
-    except:
-        return None
+    sigma = np.sqrt(2 * abs(np.log(S_0 / K)) / T) if market - intrinsic < 1 else np.sqrt(2 * np.pi / T * (market - intrinsic) / (S_0 + K))
 
-    max_iter = 10000
+    max_iter = 1000
     for _ in range(max_iter):
         price = bs_price(S_0, K, T, r, sigma, q, option_type)
         if price is None:
@@ -56,9 +58,14 @@ def bs_iv(market, S_0, K, T, r, q, option_type="call"):
             break
         increment = (price - market) / v
         sigma -= increment
-        if abs(increment) < 1e-8:
+        if sigma <= 0:
+            sigma = 1e-4  
+        if abs(increment) < 1e-9:
             return sigma
 
-    print("insufficient convergence")
-    return None
+    # if insufficient convergence fall back on brentq
+    sigma = bs_iv_bq(market, S_0, K, T, r, q, option_type)
+    print(f"[brentq] strike: {K}, market: {market}, sigma: {sigma}")
+    return sigma
+
 

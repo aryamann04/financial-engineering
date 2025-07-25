@@ -121,11 +121,12 @@ def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call"):
                 implied_vols_bs.append(iv * 100)
 
     _, ax = plt.subplots()
-    ax.plot(filtered_strikes_yf, filtered_vols_yf, label='YFinance Implied Vol', marker='o', linestyle='-', color="blue")
-    ax.plot(filtered_strikes_bs, implied_vols_bs, label='BS Implied Vol', marker='o', linestyle='--', color="orange")
-    
-    ax.set_xlabel('Strike Prices')
-    ax.set_ylabel(f'Implied Vol')
+    ax.plot(filtered_strikes_yf, filtered_vols_yf, label='yfinance implied vol', marker='o', linestyle='-', color="blue")
+    ax.plot(filtered_strikes_bs, implied_vols_bs, label='black-scholes implied vol', marker='o', linestyle='--', color="orange")
+    ax.axvline(x=S_0, color='black', linestyle='--', label='current price')
+
+    ax.set_xlabel('strikes')
+    ax.set_ylabel(f'implied vols (%)')
     ax.set_title(f'Vol Skew for {ticker_obj.ticker} on {expiry_date_str}')
     ax.legend()
     ax.grid(True)
