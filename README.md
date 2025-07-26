@@ -117,7 +117,7 @@ These values are essential when hedging an option or multi-leg option strategy.
 - The main components of this section include ```Bond```, ```ZeroCouponBond```, ```ZeroCouponBondOption```, ```Caplet```, and ```Floorlet```. Each class offers methods to construct interest rate trees, calculate instrument prices using the binomial model, and print the trees for visualization.
 
 ### Bond 
-- ```bond.py`` Price a bond with various parameters. You can pick the issue date, maturity date (or time to maturity), purchase date, coupon rate, and coupon frequency. The pricing utilizes bootstrapped discount factors from the current treasury yield curve. In addition to getting data on clean/dirty price, get the values of modified duration (cash-weighted time to maturity), PV01 (estimated price change per basis point change in yields) and bond convexity. There is also an option to graph clean and dirty prices across the life of the bond. 
+- ```bond.py``` Price a bond with various parameters. You can pick the issue date, maturity date (or time to maturity), purchase date, coupon rate, and coupon frequency. The pricing utilizes bootstrapped discount factors from the current treasury yield curve. In addition to getting data on clean/dirty price, get the values of modified duration (cash-weighted time to maturity), PV01 (estimated price change per basis point change in yields) and bond convexity. There is also an option to graph clean and dirty prices across the life of the bond. 
 - ```boostrap.py``` The script used to bootstrap discount factors, and thus zero coupon yields, implied by the current treasury yield curve. 
 
 #### Zero Coupon Bonds and Options on ZCBs
