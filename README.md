@@ -37,8 +37,8 @@ python main.py
 ## Functionalities 
 ### Equity Options
 
-### Option Strategies 
-- ```optionstrategies.py``` Price and visualize various option strategies on a ticker of your choice. Will output the options made, along with key information such as their Black-Scholes price, market price, and greeks. Enter a percent OTM/ITM the strategy should be. For instance, if you would like to place a long strangle with a long call 10% OTM and a long put 10% OTM, enter 0.1 in the ```percent_itm_otm``` field. Both the Black-Scholes price and market price of the strategy are printed as well as the breakeven points on the profit & loss plot. The greeks of the overall strategy are also printed. Strategies available include:
+### Equity Option Strategies 
+- ```strategy.py``` Price and visualize various option strategies on a ticker of your choice. Will output the options made, along with key information such as their Black-Scholes price, market price, and greeks. You are able to intricately customize the strategies by entering the strikes for each constituent option of an option strategy, allowing you to experiment with asymmetric positions. Both the Black-Scholes price and market price of the strategy are printed as well as the breakeven points on the profit & loss plot. The greeks of the overall strategy are also printed. Strategies available include:
   
   - ```atm_call()```
   - ```itm_call()```
@@ -88,7 +88,7 @@ strategy.greeks()  # print strategy greeks
 strategy.visualize_payoff()  # view payoff graph and break-even points
 ```
 
-- ```optionspricing.py``` Prices options with the binomial model as well as the Black Scholes model. Given a ticker, the current stock price and dividend yield are retrieved via the yfinance library. The user enters the strike price, time to expiry, and option type ("call" or "put") as well as the number of periods for the binomial model. The volatility parameter is proxied by historical volatility (standard deviation) of the stock's price across a time period proportional to that of the option's life. The program outputs the price calculated by the binomial model (both European and American), the Black-Scholes price, the current actual market price of the option, and the implied volatility.
+- ```pricing.py``` Prices options with the binomial model as well as the Black Scholes model. Given a ticker, the current stock price and dividend yield are retrieved via the yfinance library. The user enters the strike price, time to expiry, and option type ("call" or "put") as well as the number of periods for the binomial model. The volatility parameter is proxied by historical volatility (standard deviation) of the stock's price across a time period proportional to that of the option's life. The program outputs the price calculated by the binomial model (both European and American), the Black-Scholes price, the current actual market price of the option, and the implied volatility.
 
 ### Greeks
 
@@ -109,10 +109,11 @@ These values are essential when hedging an option or multi-leg option strategy.
 
 ### Volatility
 
-- ```volatility.py``` Calculate the volatility skew of an option at a given strike price and plot the current real-time volatility surface. Currently, historical volatility (standard deviation) of the stock's price across a time period proportional to that of the option's life is used as a proxy for the volatility parameter to the Black-Scholes call price formula. In the ```equity-options``` folder, the files ```svi.py``` and ```sabr.py``` (both currently in progress) attempt to incorporate more advanced measures of volatility as inputs to the Black-Scholes model, capturing the volatility surface in model pricing. 
+- ```iv.py``` The function ```bs_iv``` calculates the implied volatility of an option from its market price (via yfinance). The primary root-finding function used is Newton's method; in the case of insufficient convergence, the function falls back on Brent's method via ```scipy```'s ```brentq```. 
+- ```marketvols.py``` Contains various functions useful for calculating an option's volatility via its market price. Includes the ability to plot the volatility surface for an option which shows both the Black-Scholes implied volatility and yfinance's implied volatility. 
 
 ### Fixed Income
-- ```bonds.py``` The main functions include ZeroCouponBond, ZeroCouponBondOption, Caplet, and Floorlet. Each class offers methods to construct interest rate trees, calculate instrument prices using the binomial model, and print the trees for visualization.
+- The main components of this section include ```ZeroCouponBond```, ```ZeroCouponBondOption```, ```Caplet```, and ```Floorlet```. Each class offers methods to construct interest rate trees, calculate instrument prices using the binomial model, and print the trees for visualization.
 
 #### Zero Coupon Bonds and Options on ZCBs
 ```python
@@ -159,4 +160,5 @@ The following is an example of the binomial price tree output for the zero coupo
 
 ### Current Bonds and Yield Curve
 
-- ```currentbonds.py``` Get live information on U.S. Treasury Yields (1, 2, 3, 4, 6 months; 1, 2, 3, 5, 7, 10, 20, 30 years) and plot the current yield curve with ```plot_yield_curve()```. 
+- ```marketyields.py``` Get live information on U.S. treasury yield (1, 2, 3, 4, 6 months; 1, 2, 3, 5, 7, 10, 20, 30 years) and view the state of the current yield curve.
+- ```bootstrap.py``` Plot bootstrapped zero coupon yields using live treasury yield data. These yields are used as the risk-free rate input into the binomial and Black-Scholes models. 

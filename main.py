@@ -13,7 +13,8 @@ from fixed_income.core.zcb import ZeroCouponBond
 from fixed_income.derivatives.zcb_option import ZeroCouponBondOption
 from fixed_income.derivatives.caplet import Caplet
 from fixed_income.derivatives.floorlet import Floorlet
-from fixed_income.core.marketyields import treasury_yield, plot_yield_curve
+from fixed_income.core.marketyields import plot_yield_curve
+from fixed_income.core.bootstrap import zc_yield, plot_zc_yields
 
 def main():
     while True:
@@ -48,7 +49,7 @@ def handle_equity_options():
         print("-----------------------------------------------")
         ticker = input("stock ticker: ").upper().strip()
         T = get_yrs()
-        r = treasury_yield(T)
+        r = zc_yield(T)
         n = max(int(input("desired number of periods in the binomial model: ")), 10)
 
         strategy = OptionStrategy(ticker, T, r, n)
@@ -86,7 +87,7 @@ def handle_equity_options():
         print("----------------------------------------------")
         ticker = input("stock ticker: ").upper().strip()
         T = get_yrs()
-        r = treasury_yield(T)
+        r = zc_yield(T)
         
         print("\navailable exotics:")
         exotic_strategies = [
@@ -221,7 +222,10 @@ def handle_fixed_income():
     elif choice == '5':
         print(f"plotting yield curve... (date: {datetime.datetime.today().strftime('%Y-%m-%d')})")
         plot_yield_curve()
-    
+        zc_plot = input("plot the bootstrapped zero coupon yield curve? (yes/no)").strip().lower()
+        if zc_plot == 'yes':
+            print(f"plotting bootstrapped zero coupon yields... (date: {datetime.datetime.today().strftime('%Y-%m-%d')})")
+            plot_zc_yields()
     else:
         print("invalid choice: returning to menu")
 

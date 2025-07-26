@@ -148,8 +148,18 @@ def plot(yields):
     plt.tight_layout()
     plt.show()
  
+ # ----------------------------------------------------------------------------- #
 def plot_zc_yields():
     plot(get_zc_yields())
 
 def get_zc_yields():
     return zero_coupon_yields(full_disc_factors(bootstrap(build_instruments())))
+
+def zc_yield(t):
+    zc_yields = get_zc_yields()
+    maturities = list(zc_yields.keys())
+    closest = min(maturities, key=lambda tau: abs(tau - t))
+    return zc_yields[closest]
+    
+def get_disc_factors(): 
+    return full_disc_factors(bootstrap(build_instruments()))
