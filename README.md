@@ -7,9 +7,10 @@
   - [Exotics](#exotics)
   - [Volatility](#volatility)
 - [Fixed Income](#fixed-income)
+  - [Bonds and Bootsrapping](#bond)
   - [Zero Coupon Bonds](#zero-coupon-bonds-and-options-on-zcbs)
   - [Caplets and Floorlets](#caplets-and-floorlets)
-  - [Current Bonds & Yield Curve](#current-bonds-and-yield-curve)
+  - [Yield Curve](#current-bonds-and-yield-curve)
 
 ## Installation Guide
 To install and use this tool on your computer, follow these steps:
@@ -113,7 +114,11 @@ These values are essential when hedging an option or multi-leg option strategy.
 - ```marketvols.py``` Contains various functions useful for calculating an option's volatility via its market price. Includes the ability to plot the volatility surface for an option which shows both the Black-Scholes implied volatility and yfinance's implied volatility. 
 
 ### Fixed Income
-- The main components of this section include ```ZeroCouponBond```, ```ZeroCouponBondOption```, ```Caplet```, and ```Floorlet```. Each class offers methods to construct interest rate trees, calculate instrument prices using the binomial model, and print the trees for visualization.
+- The main components of this section include ```Bond```, ```ZeroCouponBond```, ```ZeroCouponBondOption```, ```Caplet```, and ```Floorlet```. Each class offers methods to construct interest rate trees, calculate instrument prices using the binomial model, and print the trees for visualization.
+
+### Bond 
+- ```bond.py`` Price a bond with various parameters. You can pick the issue date, maturity date (or time to maturity), purchase date, coupon rate, and coupon frequency. The pricing utilizes bootstrapped discount factors from the current treasury yield curve. In addition to getting data on clean/dirty price, get the values of modified duration (cash-weighted time to maturity), PV01 (estimated price change per basis point change in yields) and bond convexity. There is also an option to graph clean and dirty prices across the life of the bond. 
+- ```boostrap.py``` The script used to bootstrap discount factors, and thus zero coupon yields, implied by the current treasury yield curve. 
 
 #### Zero Coupon Bonds and Options on ZCBs
 ```python

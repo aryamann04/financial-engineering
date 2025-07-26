@@ -244,13 +244,13 @@ class Bond:
         print(tabulate([
             [f"Dirty price ({today_str})", f"${self.dirty_price(today):.3f}"],
             [f"Clean price ({today_str})", f"${self.clean_price(today):.3f}"],
-            [f"Price ({today_str})", f"${self.price:.3f}"],
             ["Yield to maturity (%)", f"{self.ytm:.3f}%"],
             ["Modified duration", f"{self.modified_duration:.3f}"],
             ["PV01", 0],
             ["Convexity", 0],
         ], tablefmt="grid"))
         print("**********************************")
+    
     def plot_price_trajectory(self):
         dates, dirty_prices, clean_prices = self.build_price_lists()
         plt.figure(figsize=(12, 6))
@@ -262,21 +262,3 @@ class Bond:
         plt.legend()
         plt.grid()
         plt.show()
-
-bond1 = Bond(face_value=1000, coupon_rate=0.05, maturity=5, coupon_freq=4, issue_date='2023-01-01')
-bond2 = Bond(face_value=1000, coupon_rate=0.08, maturity=7, coupon_freq=2, issue_date='2022-06-01')
-bond3 = Bond(face_value=1000, coupon_rate=0.03, maturity=0.5, coupon_freq=2, issue_date='2023-10-01')
-bond4 = Bond(face_value=1000, coupon_rate=0.04, maturity=0.5, coupon_freq=4)
-bond5 = Bond(face_value=1000, coupon_rate=0.02, coupon_freq=2, maturity_date='2055-07-26')
-
-bond1.summary()
-bond2.summary()
-bond3.summary()
-bond4.summary()
-bond5.summary()
-
-bond1.plot_price_trajectory()
-bond2.plot_price_trajectory()
-bond3.plot_price_trajectory()
-bond4.plot_price_trajectory()
-bond5.plot_price_trajectory()
