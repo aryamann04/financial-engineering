@@ -141,14 +141,56 @@ def handle_fixed_income():
     print("\n----------------------------------------------")
     print("\t\tFIXED INCOME\t\t")
     print("----------------------------------------------")
-    print("1. zero coupon bond")
-    print("2. option on zero coupon bond")
-    print("3. caplet")
-    print("4. floorlet")
-    print("5. plot the current yield curve")
+    print("1. bonds")
+    print("2. zero coupon bond")
+    print("3. option on zero coupon bond")
+    print("4. caplet")
+    print("5. floorlet")
+    print("6. plot the current yield curve")
     choice = input("select an option (1-5): ")
-    
+
     if choice == '1':
+        print("\n**** BOND ****")
+        issue_date = input("issue date (YYYY-MM-DD) (enter 1 to use today's date): ")
+        if issue_date == '1':
+            issue_date = datetime.datetime.today().strftime('%Y-%m-%d')
+        else:
+            try:
+                issue_date = datetime.datetime.strptime(issue_date, '%Y-%m-%d')
+            except ValueError:
+                print("invalid date format: must be YYYY-MM-DD")
+                return
+
+        selection = input("enter maturity as number of years (enter 1) or date (enter 2): ")
+        if selection == 1: 
+            maturity = get_yrs()
+            maturity_date = None
+        elif selection == 2:
+            maturity_date = input("maturity date (YYYY-MM-DD): ")
+            maturity = None
+        else: 
+            print("invalid selection: must be 1 or 2")
+            return
+        
+
+        face_value = float(input("face value: "))
+        coupon_rate = float(input("coupon rate (as decimal, e.g. 0.05 for 5%): "))
+        freq_type = input("coupons paid per year (e.g. enter 2 for semiannual, 12 for monthly, etc.): ").strip().lower()
+        
+        if freq_type.isdigit():
+            freq_type = int(freq_type)
+        else:
+            print("invalid frequency type: must be an integer")
+            return
+        
+        bond = Bond(face_value, coupon_rate, maturity, freq_type, issue_date, maturity_date)
+        bond.summary()
+        
+        plot = input("plot clean vs. dirty prices over time? (yes/no)").strip().lower()
+        if plot == 'yes':
+            bond.plot_prices()
+
+    elif choice == '2':
         print("\n**** ZERO COUPON BOND ****")
         face_value = float(input("face value: "))
         T = float(input("maturity (years): "))
@@ -165,7 +207,7 @@ def handle_fixed_income():
         zcb.print_bond_tree()
         zcb.print_interest_tree()
     
-    elif choice == '2':
+    elif choice == '3':
         print("\n**** OPTION ON ZERO COUPON BOND ****")
         face_value = float(input("face value of underlying zero coupon bond: "))
         n = float(input("maturity of bond (integer years): "))
@@ -180,7 +222,8 @@ def handle_fixed_income():
         option.price()
         option.print_option_tree()
     
-    elif choice == '3':
+    elif choice == '4':
+        print("\n**** CAPLET ****")
         cf_expiry = int(input("expiry (years): "))
         cf_notional = float(input("notional amount: "))
         caplet_strike = float(input("strike rate: "))
@@ -202,7 +245,8 @@ def handle_fixed_income():
         floorlet.print_floorlet_tree()
         floorlet.print_interest_tree()
 
-    elif choice == '4':
+    elif choice == '5':
+        print("\n**** FLOORLET ****")
         cf_expiry = int(input("expiry (years): "))
         cf_notional = float(input("notional amount: "))
         floorlet_strike = float(input("strike rate: "))
@@ -219,7 +263,7 @@ def handle_fixed_income():
         floorlet.print_floorlet_tree()
         floorlet.print_interest_tree()
     
-    elif choice == '5':
+    elif choice == '6':
         print(f"plotting yield curve... (date: {datetime.datetime.today().strftime('%Y-%m-%d')})")
         plot_yield_curve()
         zc_plot = input("plot the bootstrapped zero coupon yield curve? (yes/no)").strip().lower()

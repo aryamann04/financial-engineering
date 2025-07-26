@@ -1,7 +1,5 @@
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from matplotlib.ticker import FixedLocator
-
 import numpy as np
 from datetime import datetime, timedelta
 from scipy.optimize import fsolve
@@ -87,6 +85,8 @@ def bootstrap(instruments, interpolation='linear'):
 
 def interpolate_d(t, d_factors, method='log-linear'):
     t = float(t)
+    if t <= 0:
+        return 1.0
     if t in d_factors:
         return d_factors[t]
     else:
