@@ -101,12 +101,12 @@ Greeks of individual options as well as multi-leg options strategies are calcula
 - ```rho```: sensitivity of the option's price to movement in interest rates  
 These values are essential when hedging an option or multi-leg option strategy. 
 
-<img width="600" alt="Screenshot 2024-06-22 at 9 04 23 PM" src="https://github.com/aryamann04/options/assets/140534650/3ce31b2b-0b1c-440d-82e8-82dcf3ad3724">
+<img width="600" alt="Iron condor" src="https://github.com/aryamann04/options/assets/140534650/3ce31b2b-0b1c-440d-82e8-82dcf3ad3724">
 
 ### Exotics 
 
 - ```exotics.py```  Price digital call/put options, single period range accruals, and Asian options with the Black-Scholes model and Monte Carlo simulation.  
-<img width="600" alt="Screenshot 2024-06-25 at 9 24 02 PM" src="https://github.com/aryamann04/financial-engineering/assets/140534650/7d51d623-9359-480c-bfa6-4795e1982620">
+<img width="600" alt="Range accrual" src="https://github.com/aryamann04/financial-engineering/assets/140534650/7d51d623-9359-480c-bfa6-4795e1982620">
 
 ### Volatility
 
@@ -119,6 +119,8 @@ These values are essential when hedging an option or multi-leg option strategy.
 ### Bond 
 - ```bond.py``` Price a bond with various parameters. You can pick the issue date, maturity date (or time to maturity), purchase date, coupon rate, and coupon frequency. The pricing utilizes bootstrapped discount factors from the current treasury yield curve. In addition to getting data on clean/dirty price, get the values of modified duration (cash-weighted time to maturity), PV01 (estimated price change per basis point change in yields) and bond convexity. There is also an option to graph clean and dirty prices across the life of the bond. 
 - ```boostrap.py``` The script used to bootstrap discount factors, and thus zero coupon yields, implied by the current treasury yield curve. 
+
+
 
 #### Zero Coupon Bonds and Options on ZCBs
 ```python
@@ -161,7 +163,7 @@ floorlet_6y.print_interest_tree()
 
 The following is an example of the binomial price tree output for the zero coupon bond.
 
-<img width="480" alt="Screenshot 2024-06-23 at 1 55 48 AM" src="https://github.com/aryamann04/options/assets/140534650/178e6eea-5221-4a83-81c2-9251069961c9">
+<img width="480" alt="ZCB binomial" src="https://github.com/aryamann04/options/assets/140534650/178e6eea-5221-4a83-81c2-9251069961c9">
 
 ### Current Bonds and Yield Curve
 
