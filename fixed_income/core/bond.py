@@ -34,8 +34,8 @@ class Bond:
             self.issue_date = issue_date
 
         if maturity_date is None: 
-            self.maturity_date = maturity_date
-            self.maturity = self.issue_date + relativedelta(
+            self.maturity = maturity
+            self.maturity_date = self.issue_date + relativedelta(
                 years=int(maturity),
                 days=int((maturity % 1) * 365)
             )
