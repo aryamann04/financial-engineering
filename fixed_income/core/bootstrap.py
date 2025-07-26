@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from scipy.optimize import fsolve
 
-from marketyields import treasury_yield
+from fixed_income.core.marketyields import treasury_yield
 
 def par_price(y, c, T): 
     # zero coupon convention for short-dated

@@ -182,7 +182,6 @@ def handle_fixed_income():
                 print("invalid date format: must be YYYY-MM-DD")
                 return
         
-
         face_value = float(input("face value: "))
         coupon_rate = float(input("coupon rate (as decimal, e.g. 0.05 for 5%): "))
         freq_type = input("coupons paid per year (e.g. enter 2 for semiannual, 12 for monthly, etc.): ").strip().lower()
@@ -196,26 +195,52 @@ def handle_fixed_income():
         bond = Bond(face_value, coupon_rate, maturity, freq_type, issue_date, maturity_date, purchase_date)
         bond.summary()
         
-        plot = input("plot clean vs. dirty prices over time? (yes/no)").strip().lower()
+        plot = input("plot clean vs. dirty prices over time? (yes/no): ").strip().lower()
         if plot == 'yes':
-            bond.plot_prices()
+            bond.plot_price_trajectory()
 
     elif choice == '2':
         print("\n**** ZERO COUPON BOND ****")
-        face_value = float(input("face value: "))
-        T = float(input("maturity (years): "))
-        r_0 = float(input("initial interest rate: "))
-        u = float(input("up-factor (u): "))
-        d = float(input("down-factor (d): "))
-        
-        if not (0 < d < 1 + r_0 < u): 
-            print("invalid: we require 0 < d < 1 + r_0 < u")
-            return
+        issue_date = input("issue date (YYYY-MM-DD) (enter 1 to use today's date): ")
+        if issue_date == '1':
+            issue_date = datetime.datetime.today().strftime('%Y-%m-%d')
+        else:
+            try:
+                issue_date = datetime.datetime.strptime(issue_date, '%Y-%m-%d')
+            except ValueError:
+                print("invalid date format: must be YYYY-MM-DD")
+                return
 
-        zcb = ZeroCouponBond(face_value, T, r_0, u, d)
-        zcb.price()
-        zcb.print_bond_tree()
-        zcb.print_interest_tree()
+        selection = input("enter maturity as number of years (enter 1) or date (enter 2): ")
+        if selection == 1: 
+            maturity = get_yrs()
+            maturity_date = None
+        elif selection == 2:
+            maturity_date = input("maturity date (YYYY-MM-DD): ")
+            maturity = None
+        else: 
+            print("invalid selection: must be 1 or 2")
+            return
+        
+        purchase_date = input("purchase date (YYYY-MM-DD) (enter 1 to use today's date): ")
+        if purchase_date == '1':
+            purchase_date = datetime.datetime.today().strftime('%Y-%m-%d')
+        else:
+            try:
+                purchase_date = datetime.datetime.strptime(purchase_date, '%Y-%m-%d')
+            except ValueError:
+                print("invalid date format: must be YYYY-MM-DD")
+                return
+        
+        face_value = float(input("face value: "))
+        u = float(input("[binomial model] up-factor (u): "))
+        d = float(input("[binomial model] down-factor (d): "))
+
+        zcb = ZeroCouponBond(face_value, u, d, maturity, issue_date, maturity_date, purchase_date)
+        zcb.summary()
+        plot = input("plot zcb prices over time? (yes/no): ").strip().lower()
+        if plot == 'yes':
+            zcb.plot_price_trajectory()
     
     elif choice == '3':
         print("\n**** OPTION ON ZERO COUPON BOND ****")
@@ -276,7 +301,7 @@ def handle_fixed_income():
     elif choice == '6':
         print(f"plotting yield curve... (date: {datetime.datetime.today().strftime('%Y-%m-%d')})")
         plot_yield_curve()
-        zc_plot = input("plot the bootstrapped zero coupon yield curve? (yes/no)").strip().lower()
+        zc_plot = input("plot the bootstrapped zero coupon yield curve? (yes/no): ").strip().lower()
         if zc_plot == 'yes':
             print(f"plotting bootstrapped zero coupon yields... (date: {datetime.datetime.today().strftime('%Y-%m-%d')})")
             plot_zc_yields()

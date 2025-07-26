@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from scipy.optimize import fsolve
 from tabulate import tabulate
 
-from bootstrap import get_disc_factors, get_zc_yields, interpolate_d
+from fixed_income.core.bootstrap import get_disc_factors, get_zc_yields, interpolate_d
 
 class Bond:
     def __init__(self, face_value, coupon_rate, maturity=None, coupon_freq=2, issue_date=None, maturity_date=None, purchase_date=None):
