@@ -172,6 +172,16 @@ def handle_fixed_income():
             print("invalid selection: must be 1 or 2")
             return
         
+        purchase_date = input("purchase date (YYYY-MM-DD) (enter 1 to use today's date): ")
+        if purchase_date == '1':
+            purchase_date = datetime.datetime.today().strftime('%Y-%m-%d')
+        else:
+            try:
+                purchase_date = datetime.datetime.strptime(purchase_date, '%Y-%m-%d')
+            except ValueError:
+                print("invalid date format: must be YYYY-MM-DD")
+                return
+        
 
         face_value = float(input("face value: "))
         coupon_rate = float(input("coupon rate (as decimal, e.g. 0.05 for 5%): "))
@@ -183,7 +193,7 @@ def handle_fixed_income():
             print("invalid frequency type: must be an integer")
             return
         
-        bond = Bond(face_value, coupon_rate, maturity, freq_type, issue_date, maturity_date)
+        bond = Bond(face_value, coupon_rate, maturity, freq_type, issue_date, maturity_date, purchase_date)
         bond.summary()
         
         plot = input("plot clean vs. dirty prices over time? (yes/no)").strip().lower()

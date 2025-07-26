@@ -10,7 +10,7 @@ from tabulate import tabulate
 from bootstrap import get_disc_factors, get_zc_yields, interpolate_d
 
 class Bond:
-    def __init__(self, face_value, coupon_rate, maturity, coupon_freq=2, issue_date=None, maturity_date=None):
+    def __init__(self, face_value, coupon_rate, maturity, coupon_freq=2, issue_date=None, maturity_date=None, purchase_date=None):
         self.face_value = face_value
         self.coupon_rate = coupon_rate
         self.coupon_freq = coupon_freq
@@ -20,6 +20,11 @@ class Bond:
             "quarterly" if coupon_freq == 4 else
             "monthly"
         )
+
+        if isinstance(purchase_date, str): 
+            self.purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d')
+        else: 
+            self.purchase_date = datetime.today()
 
         if issue_date is None:
             self.issue_date = datetime.today()
@@ -56,20 +61,20 @@ class Bond:
         return schedule
 
     def previous_coupon_dates(self):
-        today = self.purchase_date
+        today = datetime.today()
         prev = [d.strftime('%Y-%m-%d') for d in self.coupon_schedule() if d < today]
         text = ', '.join(prev) if prev else 'N/A'
         return textwrap.fill(text, width=40)
 
     def future_coupon_dates(self):
-        today = self.purchase_date
+        today = datetime.today()
         fut = [d.strftime('%Y-%m-%d') for d in self.coupon_schedule() if d > today]
         text = ', '.join(fut) if fut else 'N/A'
         return textwrap.fill(text, width=40)
 
     def accr_int(self, on_date=None):
         if on_date is None:
-            on_date = self.purchase_date
+            on_date = datetime.today()
         schedule = self.coupon_schedule()
 
         past = [d for d in schedule if d <= on_date]
@@ -116,31 +121,36 @@ class Bond:
 
         return dates, dirty_prices, clean_prices
 
-    @property
-    def dirty_price(self):
+    def dirty_price(self, on_date=None):
+        if on_date is None:
+            on_date = self.purchase_date
+
         y = self.ytm / 100.0
         m = self.coupon_freq
-        coupon_dates = self.coupon_schedule()
-        on_date = self.purchase_date
+        C = self.coupons_notl
+        sched = self.coupon_schedule()
 
-        N = sum(d > on_date for d in coupon_dates)
+        past = [d for d in sched if d < on_date]
+        last = past[-1] if past else self.issue_date
+        future = [d for d in sched if d > on_date]
+        next_c = future[0] if future else sched[-1]
 
-        past = [d for d in coupon_dates if d <= on_date]
-        last_coupon = past[-1] if past else self.issue_date
-        future = [d for d in coupon_dates if d > on_date]
-        next_coupon = future[0] if future else coupon_dates[-1]
-        days_between = (next_coupon - last_coupon).days
-        days_elapsed = (on_date - last_coupon).days
-        w = 1 + days_elapsed / days_between if days_between > 0 else 1
+        dt = (next_c - last).days
+        de = (on_date - last).days
+        k = (dt - de) / dt   
 
-        dirty = ((1 + y / m) ** w) * (
-                (self.coupon_rate / y) * (1 - 1 / (1 + y / m) ** N) +
-                1 / (1 + y / m) ** N) * self.face_value
-        return dirty
+        N = sum(d > next_c for d in sched)
+
+        pv = 0.0
+        pv += C / (1 + y/m)**k
+
+        for i in range(1, N+1):
+            pv += C / (1 + y/m)**(k + i)
+        pv += self.face_value / (1 + y/m)**(k + N)
+        return pv
     
-    @property
-    def clean_price(self):
-        return self.dirty_price - self.accrued_interest
+    def clean_price(self, on_date=None):
+        return self.dirty_price(on_date) - self.accrued_interest(on_date)
     
     @property
     def price(self):
@@ -193,10 +203,32 @@ class Bond:
         y = self.ytm / 100.0
         return macaulay / (1 + y / self.coupon_freq)
     
+    @property
+    def pv01(self):
+        y = self.ytm / 100.0
+        modified_duration = self.modified_duration
+        return modified_duration * 0.0001 * self.dirty_price(datetime.today())
+    
+    @property
+    def convexity(self): 
+        y = self.ytm / 100.0
+        m = self.coupon_freq
+        n = int(self.maturity * m)
+        cfm = self.coupons_notl  
+        P = self.dirty_price(datetime.today())
+
+        conv_sum = 0.0
+        for i in range(1, n+1):
+            Ci = cfm if i < n else cfm + self.face_value
+            conv_sum += Ci * i * (i + 1) / (1 + y/m)**(i + 2)
+
+        return conv_sum / (P * m**2)
+    
     def summary(self):
+        today = datetime.today()
         print("\n********** BOND SUMMARY **********")
         print(f"{self.maturity}Y {self.freq_type} bond issued on {datetime.strftime(self.issue_date, '%Y-%m-%d')} with {self.coupon_rate * 100:.2f}% coupon and face value ${self.face_value:.2f}")
-        ai = self.accrued_interest 
+        ai = self.accrued_interest(today)
         print(tabulate([
             ["Issue date", self.issue_date.strftime("%Y-%m-%d")],
             ["Purchase date", self.purchase_date.strftime("%Y-%m-%d")],
@@ -208,10 +240,11 @@ class Bond:
             ["Future coupon dates", self.future_coupon_dates()],
             ["Accrued interest", f"${ai:.2f}"],
         ], headers=["Parameter", "Value"], tablefmt="grid"))
+        today_str = datetime.strptime(today, '%Y-%m-%d')
         print(tabulate([
-            ["Dirty price", f"${self.dirty_price:.3f}"],
-            ["Clean price", f"${self.clean_price:.3f}"],
-            ["Price", f"${self.price:.3f}"],
+            [f"Dirty price ({today_str})", f"${self.dirty_price(today):.3f}"],
+            [f"Clean price ({today_str})", f"${self.clean_price(today):.3f}"],
+            [f"Price ({today_str})", f"${self.price:.3f}"],
             ["Yield to maturity (%)", f"{self.ytm:.3f}%"],
             ["Modified duration", f"{self.modified_duration:.3f}"],
             ["PV01", 0],
