@@ -34,18 +34,24 @@ class Bond:
         else:
             self.issue_date = issue_date
 
-        if maturity_date is None: 
+        months_per_coupon = 12 // coupon_freq
+        if maturity_date is None:
             self.maturity = maturity
-            self.maturity_date = self.issue_date + relativedelta(
-                years=int(maturity),
-                days=int((maturity % 1) * 365)
-            )
-        else: 
+            num_coupons = int(round(self.maturity * coupon_freq))
+            self._coupon_dates = [
+                self.issue_date + relativedelta(months=months_per_coupon * i)
+                for i in range(1, num_coupons + 1)
+            ]
+            self.maturity_date = self._coupon_dates[-1]
+        else:
             self.maturity_date = datetime.strptime(maturity_date, '%Y-%m-%d')
-            self.maturity = (self.maturity_date - self.issue_date).days / 365.0
+            self.maturity = (self.maturity_date - self.issue_date).days / 365.25
+            num_coupons = int(round(self.maturity * coupon_freq))
+            self._coupon_dates = [
+                self.issue_date + relativedelta(months=months_per_coupon * i)
+                for i in range(1, num_coupons + 1)
+            ]
         
-        self.purchase_date = datetime.today()
-
         past = [d for d in self.coupon_schedule() if d <= datetime.today()]
         self.last_coupon_date = past[-1] if past else self.issue_date
 
@@ -57,13 +63,7 @@ class Bond:
         self.accrued_interest = self.accr_int()
 
     def coupon_schedule(self):
-        schedule = []
-        dt_months = int(12 / self.coupon_freq)
-        for i in range(1, int(self.maturity * self.coupon_freq) + 1):
-            schedule.append(
-                self.issue_date + relativedelta(months=dt_months * i)
-            )
-        return schedule
+        return self._coupon_dates
 
     def previous_coupon_dates(self):
         today = datetime.today()
@@ -118,6 +118,8 @@ class Bond:
     def dirty_price(self, on_date=None):
         if on_date is None:
             on_date = self.purchase_date
+        elif on_date == self.maturity_date:
+            return self.face_value
 
         y = self.ytm / 100.0
         m = self.coupon_freq
@@ -127,7 +129,7 @@ class Bond:
         past = [d for d in sched if d <= on_date]
         last = past[-1] if past else self.issue_date
         future = [d for d in sched if d > on_date]
-        next_c = future[0] if future else sched[-1]
+        next_c = future[0] if future else self.maturity_date
 
         dt = (next_c - last).days
         de = (on_date - last).days
@@ -159,10 +161,16 @@ class Bond:
         times = [round(dt * i, 8) for i in range(1, periods + 1)]
 
         pv = 0.0
+        max_t = max(self.disc_factors)      
+        D_max = self.disc_factors[max_t]
+
         for cf, t in zip(cash_flows, times):
             D_t = self.disc_factors.get(t)
             if D_t is None:
-                D_t = interpolate_d(t, self.disc_factors, method='log-linear')
+                try: 
+                    D_t = interpolate_d(t, self.disc_factors, method='log-linear')
+                except ValueError: 
+                    D_t = D_max ** (t / max_t)
             pv += cf * D_t
 
         return pv
@@ -191,10 +199,17 @@ class Bond:
         cf[-1] += self.face_value
         times = [i * dt for i in range(1, periods + 1)]
 
+        max_t = max(self.disc_factors)      
+        D_max = self.disc_factors[max_t]
         d_vals = []
         for t in times:
             key = round(t, 6)
-            D_t = self.disc_factors.get(key) or interpolate_d(key, self.disc_factors, method='log-linear')
+            D_t = self.disc_factors.get(key)
+            if D_t is None: 
+                try: 
+                    D_t = interpolate_d(key, self.disc_factors, method='log-linear')
+                except ValueError: 
+                    D_t = D_max ** (t / max_t)
             d_vals.append(D_t)
 
         macaulay = sum(t * c * d for t, c, d in zip(times, cf, d_vals)) / pv
@@ -225,7 +240,7 @@ class Bond:
     def summary(self):
         today = datetime.today()
         print("\n********** BOND SUMMARY **********")
-        print(f"{self.maturity}Y {self.freq_type} bond issued on {datetime.strftime(self.issue_date, '%Y-%m-%d')} with {self.coupon_rate * 100:.2f}% coupon and face value ${self.face_value:.2f}")
+        print(f"{self.maturity:.3f}Y {self.freq_type} bond issued on {datetime.strftime(self.issue_date, '%Y-%m-%d')} with {self.coupon_rate * 100:.2f}% coupon and face value ${self.face_value:.2f}")
         ai = self.accrued_interest
         print(tabulate([
             ["Issue date", self.issue_date.strftime("%Y-%m-%d")],
@@ -246,8 +261,8 @@ class Bond:
             [f"Clean price ({today_str})", f"${self.clean_price(today):.3f}"],
             ["Yield to maturity (%)", f"{self.ytm:.3f}%"],
             ["Modified duration", f"{self.modified_duration:.3f}"],
-            ["PV01", 0],
-            ["Convexity", 0],
+            ["PV01", f"{self.pv01:.3f}"],
+            ["Convexity", f"{self.convexity:.3f}"],
         ], tablefmt="grid"))
         print("**********************************")
     
@@ -256,9 +271,28 @@ class Bond:
         plt.figure(figsize=(12, 6))
         plt.plot(dates, dirty_prices, label=f'dirty price')
         plt.plot(dates, clean_prices, label=f'clean price')
-        plt.title(f'bond prices (yield constant at {self.ytm:.2f}%)')
+        plt.title(f"clean vs. dirty prices for {self.coupon_rate * 100:.2f}% {self.freq_type} {self.maturity:3f}Y bond issued on {datetime.strftime(self.issue_date, '%Y-%m-%d')} (notional face value ${self.face_value:.2f})")
         plt.xlabel('date')
         plt.ylabel('price ($)')
         plt.legend()
         plt.grid()
         plt.show()
+
+bond1 = Bond(face_value=1000, coupon_rate=0.05, maturity=5, coupon_freq=4, issue_date='2021-01-01')
+bond2 = Bond(face_value=1000, coupon_rate=0.08, maturity=7, coupon_freq=2, issue_date='2022-06-01')
+bond3 = Bond(face_value=1000, coupon_rate=0.03, maturity=0.5, coupon_freq=2, issue_date='2023-10-01', purchase_date='2023-10-15')
+bond4 = Bond(face_value=1000, coupon_rate=0.03, coupon_freq=1, issue_date='2023-10-01', maturity_date='2053-10-01')
+bond5 = Bond(face_value=1000, coupon_rate=0.06, coupon_freq=12, issue_date='2022-01-01', maturity_date='2027-01-01', purchase_date='2023-01-01')
+
+
+bond1.summary()
+bond2.summary()
+bond3.summary()
+bond4.summary()
+bond5.summary()
+
+bond1.plot_price_trajectory()
+# bond2.plot_price_trajectory()
+# bond3.plot_price_trajectory()
+# bond4.plot_price_trajectory()
+# bond5.plot_price_trajectory()
