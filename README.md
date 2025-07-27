@@ -73,21 +73,8 @@ python main.py
   -  ```long_put_butterfly_spread()```
   -  ```iron_condor()```
 
-```python
-ticker = "AAPL"
-T = 0.25  # years
-r = treasury_yield(T)  # risk-free rate (annual)
-n = 10  # number of periods in the binomial model
-percent_itm_otm = 0.1  # for option strategies
-
-# create a strategy object and call the relevant strategy function
-strategy = OptionStrategy(ticker, percent_itm_otm, T, r, n)
-strategy.iron_condor()
-
-strategy.strategy_price()  # print Black-Scholes and market price
-strategy.greeks()  # print strategy greeks
-strategy.visualize_payoff()  # view payoff graph and break-even points
-```
+<img width="500" height="300" alt="PLTR Iron Condor" src="https://github.com/user-attachments/assets/3923f163-ca2e-41e7-9a0d-fd0a9a069c6e" />
+<img width="500" height="300" alt="PLTR ATM Call" src="https://github.com/user-attachments/assets/0e5e085e-5049-4569-880e-cdd15bac25fd" />
 
 - ```pricing.py``` Prices options with the binomial model as well as the Black Scholes model. Given a ticker, the current stock price and dividend yield are retrieved via the yfinance library. The user enters the strike price, time to expiry, and option type ("call" or "put") as well as the number of periods for the binomial model. The volatility parameter is proxied by historical volatility (standard deviation) of the stock's price across a time period proportional to that of the option's life. The program outputs the price calculated by the binomial model (both European and American), the Black-Scholes price, the current actual market price of the option, and the implied volatility.
 
@@ -101,8 +88,6 @@ Greeks of individual options as well as multi-leg options strategies are calcula
 - ```rho```: sensitivity of the option's price to movement in interest rates  
 These values are essential when hedging an option or multi-leg option strategy. 
 
-<img width="600" alt="Screenshot 2024-06-22 at 9 04 23 PM" src="https://github.com/aryamann04/options/assets/140534650/3ce31b2b-0b1c-440d-82e8-82dcf3ad3724">
-
 ### Exotics 
 
 - ```exotics.py```  Price digital call/put options, single period range accruals, and Asian options with the Black-Scholes model and Monte Carlo simulation.  
@@ -110,7 +95,9 @@ These values are essential when hedging an option or multi-leg option strategy.
 
 ### Volatility
 
-- ```svi.py``` The model uses the Stochastic Inspired Volatility (SVI) model to generate input volatilities for the Black-Scholes models. For a particular given expiry date, SVI uses the implied volatilties (derived via the market prices for options available on yfinance) to fit a smooth curve across all strikes. The option pricing engine uses this curve to find the desired volatility for a given strike K and uses this as an input (sigma) for the Black-Scholes model. 
+- ```svi.py``` The model uses the Stochastic Inspired Volatility (SVI) model to generate input volatilities for the Black-Scholes models. For a particular given expiry date, SVI uses the implied volatilties (derived via the market prices for options available on yfinance) to fit a smooth curve across all strikes. The option pricing engine uses this curve to find the desired volatility for a given strike K and uses this as an input (sigma) for the Black-Scholes model.
+<img width="628" height="465" alt="SVI curve" src="https://github.com/user-attachments/assets/2bf1c76d-de5a-4f38-af61-319a037cb39d" />
+
 - ```iv.py``` The function ```bs_iv``` calculates the implied volatility of an option from its market price (via yfinance). The primary root-finding function used is Newton's method; in the case of insufficient convergence, the function falls back on Brent's method via ```scipy```'s ```brentq```. 
 - ```marketvols.py``` Contains various functions useful for calculating an option's volatility via its market price. Includes the ability to plot the volatility surface for an option which shows both the Black-Scholes implied volatility and yfinance's implied volatility. 
 
