@@ -103,6 +103,16 @@ class OptionStrategy:
             ["Market", f"${self.total_market_price:.3f}"],
         ]
         print(tabulate(price_table, headers=["Type", "Price"], tablefmt="grid"))
+
+        if self.total_market_price < self.total_price: 
+            msg = f"strategy is cheap! recommendation: execute the {self.strategy_name} on {self.ticker}"
+        elif self.total_market_price > self.total_price: 
+            msg = f"strategy is expensive! recommendation: short the {self.strategy_name} on {self.ticker}"
+        else: 
+            msg = "fairly priced! no recommendation"
+
+        print("+" + "-"*(len(msg)+2) + "+" + f"\n| {msg} |\n" + "+" + "-"*(len(msg)+2) + "+")
+
         return self.total_price, self.total_market_price
 
     def greeks(self):
@@ -141,7 +151,7 @@ class OptionStrategy:
             ["rho", f"{rho:.4f}"]
         ]
         print(tabulate(greeks_table, headers=["Greek", "Value"], tablefmt="grid"))
-        print("+==========================================================+")
+
         return {"delta": delta, "gamma": gamma, "theta": theta, "vega": vega, "rho": rho}
 
     def visualize_payoff(self, market_price=False):
@@ -182,13 +192,11 @@ class OptionStrategy:
 
         break_even_points = np.unique(np.round(break_even_points, 2))
 
-        print("\n----------------------------------------------------------")
+        print(f"\n+---------------- BREAKEVEN POINTS ----------------+\n")
         if len(break_even_points) == 0:
-            print("Break-even points: N/A")
-            print("----------------------------------------------------------\n")
+            print("N/A")
         else:
-            print(f"Break-even points: {', '.join([f'{point:.2f}' for point in break_even_points])}")
-            print("----------------------------------------------------------\n")
+            print(f"{', '.join([f'${point:.2f}' for point in break_even_points])}")
             for point in break_even_points:
                 plt.axvline(point, color='red', linestyle='--', linewidth=0.5, label = f"breakeven point: ${point}")
 
@@ -197,7 +205,7 @@ class OptionStrategy:
         plt.title(f'{self.ticker} {self.strategy_name} PnL diagram')
         plt.legend()
         plt.show()
-
+        print("+==========================================================+")
         return break_even_points
 
     def atm_call(self):
