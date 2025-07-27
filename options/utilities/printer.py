@@ -16,11 +16,11 @@ def print_option_summary(option):
     print("\n********** PRICES **********")
     prices = option.price_summary()
     price_table = [
-        ["Binomial", "European", prices["Binomial European"]],
-        ["Binomial", "American", prices["Binomial American"]],
-        ["Black-Scholes", "European", prices["Black-Scholes"]],
-        ["Monte Carlo", "European", prices["Monte Carlo"]],
-        ["Actual Market", "(yfinance API)", prices["Market Price"] or "N/A"]
+        ["Binomial", "European", f"${prices["Binomial European"]:.3f}"],
+        ["Binomial", "American", f"${prices["Binomial American"]:.3f}"],
+        ["Black-Scholes", "European", f"${prices["Black-Scholes"]:.3f}"],
+        ["Monte Carlo", "European", f"${prices["Monte Carlo"]:.3f}"],
+        ["Actual Market", "(yfinance API)", f"${prices["Market Price"]:.3f}" or "N/A"]
     ]
     print(tabulate(price_table, headers=["Model", "Option Type", "Price"], tablefmt="grid"))
 

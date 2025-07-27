@@ -42,7 +42,7 @@ class OptionStrategy:
         itm_otm = ""
         percent_itm_otm = abs((strike_price - self.S_0) / self.S_0)
 
-        print("\n----------------------------------------------------------")
+        print("\n+----------------------------------------------------------+")
         if option_type == "call":
             if strike_price < self.S_0:
                 itm_otm = "ITM"
@@ -83,24 +83,24 @@ class OptionStrategy:
             print(f"Percent ITM/OTM: {percent_itm_otm*100:.2f}%")
 
             print_option_summary(option)
-        print("----------------------------------------------------------")
+        print("+----------------------------------------------------------+")
         return option
 
     def strategy_price(self):
-        print("\n----------------------------------------------------------")
-        print(f"******************** STRATEGY ********************")
+        print("+==========================================================+")
+        print(f"\n******************** STRATEGY SUMMARY ********************")
         print(f"{self.ticker} {self.strategy_name} expiring {self.exp}")
-        print(f"**************************************************\n")
+        print(f"***********************************************************\n")
         self.total_price = sum(option.bs_price if option.position == 'long' else -option.bs_price for option in self.options)
         self.total_market_price = sum(
             option.market if option.position == 'long' else -1 * option.market
             for option in self.options
             if option.market is not None
         )
-        print(f"\n********** STRATEGY PRICE **********\n")
+        print(f"+---------------- STRATEGY PRICE ----------------+\n")
         price_table = [
-            ["Black-Scholes", f"${self.total_price:.2f}"],
-            ["Market", f"${self.total_market_price:.2f}"],
+            ["Black-Scholes", f"${self.total_price:.3f}"],
+            ["Market", f"${self.total_market_price:.3f}"],
         ]
         print(tabulate(price_table, headers=["Type", "Price"], tablefmt="grid"))
         return self.total_price, self.total_market_price
@@ -132,7 +132,7 @@ class OptionStrategy:
                 else:  # short stock position
                     delta -= 1
 
-        print(f"\n********** STRATEGY GREEKS **********")
+        print(f"\n+---------------- STRATEGY GREEKS ----------------+\n")
         greeks_table = [
             ["delta", f"{delta:.4f}"],
             ["gamma", f"{gamma:.4f}"],
@@ -141,7 +141,7 @@ class OptionStrategy:
             ["rho", f"{rho:.4f}"]
         ]
         print(tabulate(greeks_table, headers=["Greek", "Value"], tablefmt="grid"))
-        print("----------------------------------------------------------")
+        print("+==========================================================+")
         return {"delta": delta, "gamma": gamma, "theta": theta, "vega": vega, "rho": rho}
 
     def visualize_payoff(self, market_price=False):
@@ -191,7 +191,6 @@ class OptionStrategy:
             print("----------------------------------------------------------\n")
             for point in break_even_points:
                 plt.axvline(point, color='red', linestyle='--', linewidth=0.5, label = f"breakeven point: ${point}")
-                # plt.annotate(f'{point:.2f}',xy=(point, 0),xytext=(-24, 24), textcoords='offset points',ha='center',  va='bottom', fontsize=8)
 
         plt.xlabel('stock price')
         plt.ylabel('profit/loss')
