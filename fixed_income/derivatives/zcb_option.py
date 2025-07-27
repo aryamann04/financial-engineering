@@ -29,9 +29,9 @@ class ZeroCouponBondOption:
         return option_tree[0, 0]
 
     def price(self):
-        print(f"Option binomial price: ${self.binomial_price():.2f}")
+        print(f"\nOption binomial price: ${self.binomial_price():.2f}")
         print()
 
     def print_option_tree(self):
-        print("Option Price Tree:")
+        print("\nOption Price Tree:")
         self.zcb.print_tree(self.option_tree)
