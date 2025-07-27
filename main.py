@@ -18,9 +18,9 @@ from fixed_income.core.bootstrap import zc_yield, plot_zc_yields
 
 def main():
     while True:
-        print("\n------------------------------------")
+        print("\n-----------------------------------------------")
         print("\t\tMENU\t\t")
-        print("------------------------------------")
+        print("-----------------------------------------------")
         print("1. equity options")
         print("2. fixed income")
         print("3. exit")
@@ -37,9 +37,9 @@ def main():
             print("invalid choice: must be 1, 2, or 3.")
 
 def handle_equity_options():
-    print("\n----------------------------------------------")
+    print("\n-----------------------------------------------")
     print("\t\tEQUITY OPTIONS\t\t")
-    print("----------------------------------------------")
+    print("-----------------------------------------------")
 
     choice = input("enter 1 for vanilla options, 2 for exotics: ")
 
@@ -67,6 +67,7 @@ def handle_equity_options():
         strat_choice = int(input("select a strategy (1-{}) : ".format(len(strategies))))
 
         if 1 <= strat_choice <= len(strategies):
+            print()
             selected_strategy = strategies[strat_choice - 1]
             getattr(strategy, selected_strategy)()
             strategy.strategy_price()
@@ -93,9 +94,9 @@ def handle_equity_options():
                 pass
 
     elif choice == '2': 
-        print("\n----------------------------------------------")
+        print("\n-----------------------------------------------")
         print("\t\tEXOTIC OPTIONS\t\t")
-        print("----------------------------------------------")
+        print("-----------------------------------------------")
         ticker = input("stock ticker: ").upper().strip()
         T = get_yrs()
         r = zc_yield(T)
@@ -150,9 +151,9 @@ def handle_equity_options():
         print("invalid choice: returning to menu.")
 
 def handle_fixed_income():
-    print("\n----------------------------------------------")
+    print("\n-----------------------------------------------")
     print("\t\tFIXED INCOME\t\t")
-    print("----------------------------------------------")
+    print("-----------------------------------------------")
     print("1. bonds")
     print("2. zero coupon bond")
     print("3. option on zero coupon bond")

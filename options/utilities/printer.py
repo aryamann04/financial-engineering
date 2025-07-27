@@ -1,7 +1,7 @@
 from tabulate import tabulate
 
 def print_option_summary(option):
-    print("\n********** OPTION PARAMETERS **********")
+    print(f"\n+---------------- OPTION PARAMETERS ----------------+\n")
     print(tabulate([
         ["Ticker", option.ticker],
         ["Risk-Free Rate", f"{option.r*100:.2f}%"],
@@ -13,18 +13,18 @@ def print_option_summary(option):
         ["Position", option.position.capitalize()]
     ], headers=["Parameter", "Value"], tablefmt="grid"))
 
-    print("\n********** PRICES **********")
+    print(f"+---------------- PRICES ----------------+\n")
     prices = option.price_summary()
     price_table = [
-        ["Binomial", "European", f"${prices["Binomial European"]:.3f}"],
-        ["Binomial", "American", f"${prices["Binomial American"]:.3f}"],
-        ["Black-Scholes", "European", f"${prices["Black-Scholes"]:.3f}"],
-        ["Monte Carlo", "European", f"${prices["Monte Carlo"]:.3f}"],
-        ["Actual Market", "(yfinance API)", f"${prices["Market Price"]:.3f}" or "N/A"]
+        ["Binomial", "European", f"${prices['Binomial European']:.3f}"],
+        ["Binomial", "American", f"${prices['Binomial American']:.3f}"],
+        ["Black-Scholes", "European", f"${prices['Black-Scholes']:.3f}"],
+        ["Monte Carlo", "European", f"${prices['Monte Carlo']:.3f}"],
+        ["Actual Market", "(yfinance API)", f"${prices['Market Price']:.3f}" or "N/A"]
     ]
     print(tabulate(price_table, headers=["Model", "Option Type", "Price"], tablefmt="grid"))
 
-    print("\n********** VOLATILITY **********")
+    print(f"+---------------- VOLATILITY ----------------+\n")
     vol_table = [
         [f"Historical Vol (over {option.T:.2f} years)", fmt_pct(prices['Historical Vol'])],
         ["Model Vol (SVI)", fmt_pct(prices['Model Vol'])],
@@ -33,7 +33,7 @@ def print_option_summary(option):
     ]   
     print(tabulate(vol_table, headers=["Type", "Value"], tablefmt="grid"))
 
-    print("\n********** GREEKS **********")
+    print(f"+---------------- GREEKS ----------------+\n")
     greek_table = [[k, f"{v:.4f}"] for k, v in option.greeks.items()]
     print(tabulate(greek_table, headers=["Greek", "Value"], tablefmt="grid"))
 
