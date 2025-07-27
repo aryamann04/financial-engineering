@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-from options.volatility.marketvols import get_yf_iv, yf_option_price, plot_vol_skew
+from options.volatility.marketvols import get_yf_iv, yf_option_price, plot_vol_skew, yf_strikes
 
 class MarketDataFetcher:
     def __init__(self, ticker, T, creation_date=None):
@@ -57,5 +57,5 @@ class MarketDataFetcher:
     def actual_option_price(self, K, T, option_type="call"):
         return yf_option_price(self.yfTicker, K, T, option_type)
     
-    def plot_implied_vols(self, r=0): 
-        plot_vol_skew(self.yfTicker, self.current_price(), self.T, r, self.dividend_yield(), option_type="call")
+    def plot_implied_vols(self, r=0, plot=True): 
+        return plot_vol_skew(self.yfTicker, self.current_price(), self.T, r, self.dividend_yield(), option_type="call", plot=plot)

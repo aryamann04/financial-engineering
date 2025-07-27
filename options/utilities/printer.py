@@ -26,9 +26,10 @@ def print_option_summary(option):
 
     print("\n********** VOLATILITY **********")
     vol_table = [
-        ["Historical (Model Input)", fmt_pct(prices['Model Vol'])],
+        [f"Historical Vol (over {option.T:.2f} years)", fmt_pct(prices['Historical Vol'])],
+        ["Model Vol (SVI)", fmt_pct(prices['Model Vol'])],
         ["Market Implied Vol (via BS)", fmt_pct(prices['Implied Vol'])],
-        ["Market Implied Vol (via yfinance)", fmt_pct(prices['Implied Vol (yf)'])],
+        ["Market Implied Vol (via yfinance)", fmt_pct(prices['Implied Vol (yf)'])]
     ]   
     print(tabulate(vol_table, headers=["Type", "Value"], tablefmt="grid"))
 

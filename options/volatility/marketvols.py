@@ -17,6 +17,9 @@ def closest_K_T(ticker_obj, K, T):
     target_expiry = datetime.now() + timedelta(days=T * 365)
     closest_expiry = min(exp_dates, key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_expiry))
 
+    if K is None: 
+        return closest_expiry 
+    
     chain = ticker_obj.option_chain(closest_expiry)
     all_strikes = np.unique(
         np.concatenate([chain.calls["strike"].values,
@@ -27,6 +30,11 @@ def closest_K_T(ticker_obj, K, T):
 
     closest_strike = float(min(all_strikes, key=lambda s: abs(s - K)))
     return closest_strike, closest_expiry
+
+def yf_strikes(ticker_obj, T): 
+    closest_expiry = closest_K_T(ticker_obj, None, T) 
+    chain = ticker_obj.option_chain(closest_expiry)
+    return chain.calls["strike"].values
 
 def yf_option_price(ticker_obj, K, T, option_type="call"):
     try:
@@ -80,7 +88,7 @@ def vol_skew(ticker_obj, expiry_years, strike):
     return (vol_hi - vol_lo) / ((strike + 5) - (strike - 5))
 
 
-def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call"):
+def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call", plot=True):
     today = datetime.today()
     expiry_date = today + timedelta(days=T * 365)
 
@@ -96,6 +104,13 @@ def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call"):
     calls = option_chain.calls
 
     strikes = calls['strike'].values
+
+    # yf implied vols 
+
+    implied_vols_yf = calls['impliedVolatility'].values
+    valid_indices = implied_vols_yf != 0
+    strikes = strikes[valid_indices]
+    implied_vols_yf = implied_vols_yf[valid_indices]
 
     # yf implied vols 
 
@@ -124,6 +139,9 @@ def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call"):
             if iv is not None and not np.isnan(iv):
                 filtered_strikes_bs.append(strike)
                 implied_vols_bs.append(iv * 100)
+    
+    if not plot: 
+        return filtered_strikes_bs, implied_vols_bs
 
     _, ax = plt.subplots()
     ax.plot(filtered_strikes_yf, filtered_vols_yf, label='yfinance implied vol', marker='o', linestyle='-', color="blue")

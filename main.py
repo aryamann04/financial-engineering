@@ -76,10 +76,21 @@ def handle_equity_options():
             print("invalid choice: must be between 1 and {}".format(len(strategies)))
             return
         
+        # dummy option to generate plots
+        option = Option(ticker, r, T, 0, n, option_type='call')
+        plotsvi = input(f"plot SVI calibrated vols for {ticker} (yes/no)? ").strip().lower()
+        if plotsvi == 'yes': 
+            try: 
+                option.plot_svi_calibration()
+            except:
+                pass
+         
         plotskew = input(f"plot vol skew for {ticker} (yes/no)? ").strip().lower()
         if plotskew == 'yes':
-            option = Option(ticker, r, T, 0, n, option_type='call')
-            option.plot_implied_vols()
+            try:
+                option.plot_implied_vols()
+            except: 
+                pass
 
     elif choice == '2': 
         print("\n----------------------------------------------")
@@ -105,20 +116,21 @@ def handle_equity_options():
             print("\n**** DIGITAL OPTION ****")
             option_type = input("enter option type (call/put): ").strip().lower()
             if option_type not in ["call", "put"]:
-                print("invalid option type: must be 'call' or 'put', using call as defualt")
+                print("invalid option type: must be 'call' or 'put', using call as default")
                 option_type = 'call'
-            else: 
-                digital_option_strike = 250
-                payoff_amount = 1
 
-                digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type, payoff_amount)
-                digital_call_option.price()
-                digital_call_option.visualize_payoff()
+            digital_option_strike = input("strike : ")
+            payoff_amount = input("payoff (notional): ")
+
+            digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type, payoff_amount)
+            digital_call_option.price()
+            digital_call_option.visualize_payoff()
 
         elif exotic_choice == 2:  
             print("\n**** SINGLE-PERIOD RANGE ACCRUAL ****")
             ra_strike_low = input("low strike: ")
             ra_strike_high = input("high strike: ")
+            payoff_amount = input("payoff (notional): ")
 
             single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
             single_period_range_accrual.price()

@@ -169,6 +169,7 @@ class OptionStrategy:
         plt.figure(figsize=(10, 6))
         plt.plot(stock_prices, total_profit_loss, label=f'{self.strategy_name} P/L')
         plt.axhline(0, color='black', linestyle='--', linewidth=0.5)
+        plt.axvline(self.S_0, color='black', linestyle='--', linewidth=0.5, label='current price')
 
         break_even_points = []
         for i in range(1, len(stock_prices)):
@@ -189,10 +190,8 @@ class OptionStrategy:
             print(f"Break-even points: {', '.join([f'{point:.2f}' for point in break_even_points])}")
             print("----------------------------------------------------------\n")
             for point in break_even_points:
-                plt.axvline(point, color='red', linestyle='--', linewidth=0.5)
-                plt.axvline(self.S_0, color='black', linestyle='--', linewidth=0.5, label='current price')
-                plt.text(point, 0, f'{point:.2f}', verticalalignment='bottom')
-                plt.annotate(f'{point:.2f}',xy=(point, 0),xytext=(0, 8), textcoords='offset points',ha='center',  va='bottom', fontsize=8)
+                plt.axvline(point, color='red', linestyle='--', linewidth=0.5, label = f"breakeven point: ${point}")
+                # plt.annotate(f'{point:.2f}',xy=(point, 0),xytext=(-24, 24), textcoords='offset points',ha='center',  va='bottom', fontsize=8)
 
         plt.xlabel('stock price')
         plt.ylabel('profit/loss')
@@ -214,7 +213,7 @@ class OptionStrategy:
     def itm_call(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"ITM call strike (< {self.S_0:.2f}): ")
+        K = float(input(f"ITM call strike (< {self.S_0:.2f}): "))
         call = self.create_option('call', K, 'long')
         self.options.append(call)
         self.strategy_name = "ITM Call"
@@ -224,7 +223,7 @@ class OptionStrategy:
     def otm_call(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"OTM call strike (> {self.S_0:.2f}): ")
+        K = float(input(f"OTM call strike (> {self.S_0:.2f}): "))
         call = self.create_option('call', K, 'long')
         self.options.append(call)
         self.strategy_name = "OTM Call"
@@ -243,7 +242,7 @@ class OptionStrategy:
     def short_itm_call(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"ITM call strike (< {self.S_0:.2f}): ")
+        K = float(input(f"ITM call strike (< {self.S_0:.2f}): "))
         call = self.create_option('call', K, 'short')
         self.options.append(call)
         self.strategy_name = "Short ITM Call"
@@ -253,7 +252,7 @@ class OptionStrategy:
     def short_otm_call(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"OTM call strike (> {self.S_0:.2f}): ")
+        K = float(input(f"OTM call strike (> {self.S_0:.2f}): "))
         call = self.create_option('call', K, 'short')
         self.options.append(call)
         self.strategy_name = "Short OTM Call"
@@ -272,7 +271,7 @@ class OptionStrategy:
     def itm_put(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"ITM put strike (> {self.S_0:.2f}): ")
+        K = float(input(f"ITM put strike (> {self.S_0:.2f}): "))
         put = self.create_option('put', K, 'long')
         self.options.append(put)
         self.strategy_name = "ITM Put"
@@ -282,7 +281,7 @@ class OptionStrategy:
     def otm_put(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"OTM put strike (< {self.S_0:.2f}): ")
+        K = float(input(f"OTM put strike (< {self.S_0:.2f}): "))
         put = self.create_option('put', K, 'long')
         self.options.append(put)
         self.strategy_name = "OTM Put"
@@ -301,7 +300,7 @@ class OptionStrategy:
     def short_itm_put(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"ITM put strike (> {self.S_0:.2f}): ")
+        K = float(input(f"ITM put strike (> {self.S_0:.2f}): "))
         put = self.create_option('put', K, 'short')
         self.options.append(put)
         self.strategy_name = "Short ITM Put"
@@ -311,7 +310,7 @@ class OptionStrategy:
     def short_otm_put(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"OTM put strike (< {self.S_0:.2f}): ")
+        K = float(input(f"OTM put strike (< {self.S_0:.2f}): "))
         put = self.create_option('put', K, 'short')
         self.options.append(put)
         self.strategy_name = "Short OTM Put"
@@ -321,7 +320,7 @@ class OptionStrategy:
     def covered_call(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"covered call strike (> {self.S_0:.2f}): ")
+        K = float(input(f"covered call strike (> {self.S_0:.2f}): "))
         call = self.create_option('call', K, 'short')
         stock = self.create_option('stock', self.S_0, 'long')
 
@@ -334,7 +333,7 @@ class OptionStrategy:
     def married_put(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K = input(f"married put strike (< {self.S_0:.2f}): ")
+        K = float(input(f"married put strike (< {self.S_0:.2f}): "))
         put = self.create_option('put', K, 'long')
         stock = self.create_option('stock', self.S_0, 'long')
 
@@ -347,9 +346,9 @@ class OptionStrategy:
     def bull_call_spread(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K1 = input(f"[bull call spread] lower strike (< {self.S_0:.2f}): ")
+        K1 = float(input(f"[bull call spread] lower strike (< {self.S_0:.2f}): "))
         call1 = self.create_option('call', K1, 'long')
-        K2 = input(f"[bull call spread] upper strike (> {K1}): ")
+        K2 = float(input(f"[bull call spread] upper strike (> {K1}): "))
         call2 = self.create_option('call', K2, 'short')
 
         self.options.append(call1)
@@ -361,9 +360,9 @@ class OptionStrategy:
     def bear_put_spread(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K1 = input(f"[bear put spread] upper strike (> {self.S_0:.2f}): ")
+        K1 = float(input(f"[bear put spread] upper strike (> {self.S_0:.2f}): "))
         put1 = self.create_option('put', K1, 'long')
-        K2 = input(f"[bear put spread] lower strike (< {K1}): ")
+        K2 = float(input(f"[bear put spread] lower strike (< {K1}): "))
         put2 = self.create_option('put', K2, 'short')
 
         self.options.append(put1)
@@ -375,9 +374,9 @@ class OptionStrategy:
     def credit_call_spread(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K1 = input(f"[credit call spread] upper strike (> {self.S_0:.2f}): ")
+        K1 = float(input(f"[credit call spread] upper strike (> {self.S_0:.2f}): "))
         call1 = self.create_option('call', K1, 'long')
-        K2 = input(f"[credit call spread] lower strike (< {K1}): ")
+        K2 = float(input(f"[credit call spread] lower strike (< {K1}): "))
         call2 = self.create_option('call', K2, 'short')
 
         self.options.append(call1)
@@ -389,9 +388,9 @@ class OptionStrategy:
     def credit_put_spread(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K1 = input(f"[credit put spread] lower strike (< {self.S_0:.2f}): ")
+        K1 = float(input(f"[credit put spread] lower strike (< {self.S_0:.2f}): "))
         put1 = self.create_option('put', K1, 'long')
-        K2 = input(f"[credit put spread] upper strike (> {K1}): ")
+        K2 = float(input(f"[credit put spread] upper strike (> {K1}): "))
         put2 = self.create_option('put', K2, 'short')
 
         self.options.append(put1)
@@ -403,9 +402,9 @@ class OptionStrategy:
     def protective_collar(self):
         print(f"+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+\n|{self.ticker} current price: {self.S_0:.2f}|\n+{'-'*len(f'{self.ticker} current price: {self.S_0:.2f}')}+")
         self.options = []
-        K1 = input(f"[protective collar] OTM put strike (< {self.S_0:.2f}): ")
+        K1 = float(input(f"[protective collar] OTM put strike (< {self.S_0:.2f}): "))
         put = self.create_option('put', K1, 'long')
-        K2 = input(f"[protective collar] OTM call strike (> {self.S_0:.2f}): ")
+        K2 = float(input(f"[protective collar] OTM call strike (> {self.S_0:.2f}): "))
         call = self.create_option('call', K2, 'short')
         stock = self.create_option('stock', self.S_0, 'long')
 

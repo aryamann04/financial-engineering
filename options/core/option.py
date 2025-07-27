@@ -7,6 +7,7 @@ from .pricing.montecarlo import monte_carlo_european
 from options.utilities.marketdata import MarketDataFetcher
 from options.volatility.iv import bs_iv
 from options.volatility.marketvols import closest_K_T
+from options.volatility.svi import SVI
 from options.utilities.printer import print_option_summary
 
 class Option:
@@ -28,17 +29,22 @@ class Option:
         self.position = position 
         self.creation_date = creation_date
 
-        # avoid repeatedly querying api 
         self.fetcher = fetcher if fetcher else MarketDataFetcher(ticker, T, creation_date)
 
         self.S_0 = self.fetcher.current_price()
         self.q = self.fetcher.dividend_yield()
-        # self.sigma = sigma if sigma else self.fetcher.historical_volatility()
-        self.sigma = self.fetcher.historical_volatility() 
+        self.hist_vol = self.fetcher.historical_volatility() 
         self.market_iv = self.fetcher.market_iv(K, T, option_type)
 
-        self.greeks = self.calculate_greeks(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
+        try: 
+            self.svi = SVI(self.S_0, self.T, self.r, self.q, self.fetcher)
+            self.sigma = self.svi.svi_vol(self.K)
+        except: 
+            print("error with calibrating SVI, using historical vol instead...")
+            self.sigma = self.hist_vol
 
+        self.greeks = self.calculate_greeks(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
+        
     def price_summary(self):
         prices = {}
         prices["Black-Scholes"] = self.bs_price
@@ -47,8 +53,8 @@ class Option:
         prices["Monte Carlo"] = self.monte_carlo_price
         prices["Market Price"] = self.market
 
-        # placeholder
         prices["Model Vol"] = self.sigma 
+        prices["Historical Vol"] = self.hist_vol
         prices["Implied Vol"] = self.bs_iv
         prices["Implied Vol (yf)"] = self.market_iv
 
@@ -89,6 +95,10 @@ class Option:
     @property
     def plot_implied_vols(self):
         self.fetcher.plot_implied_vols(self.r)
+    
+    @property
+    def plot_svi_calibration(self): 
+        self.svi.plot_svi(K=self.K)
     
     def calculate_greeks(self, S, K, T, r, sigma, q, option_type):
         d1 = (np.log(S / K) + (r - q + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
