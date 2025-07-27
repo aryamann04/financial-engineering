@@ -98,7 +98,7 @@ class Option:
     
     @property
     def plot_svi_calibration(self): 
-        self.svi.plot_svi(K=self.K)
+        self.svi.plot_svi()
     
     def calculate_greeks(self, S, K, T, r, sigma, q, option_type):
         d1 = (np.log(S / K) + (r - q + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))

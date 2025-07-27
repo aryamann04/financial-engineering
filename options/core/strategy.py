@@ -179,7 +179,7 @@ class OptionStrategy:
         plt.figure(figsize=(10, 6))
         plt.plot(stock_prices, total_profit_loss, label=f'{self.strategy_name} P/L')
         plt.axhline(0, color='black', linestyle='--', linewidth=0.5)
-        plt.axvline(self.S_0, color='black', linestyle='--', linewidth=0.5, label='current price')
+        plt.axvline(self.S_0, color='black', linestyle='--', linewidth=0.5, label=f"current price: ${self.S_0:.2f}")
 
         break_even_points = []
         for i in range(1, len(stock_prices)):

@@ -110,6 +110,7 @@ These values are essential when hedging an option or multi-leg option strategy.
 
 ### Volatility
 
+- ```svi.py``` The model uses the Stochastic Inspired Volatility (SVI) model to generate input volatilities for the Black-Scholes models. For a particular given expiry date, SVI uses the implied volatilties (derived via the market prices for options available on yfinance) to fit a smooth curve across all strikes. The option pricing engine uses this curve to find the desired volatility for a given strike K and uses this as an input (sigma) for the Black-Scholes model. 
 - ```iv.py``` The function ```bs_iv``` calculates the implied volatility of an option from its market price (via yfinance). The primary root-finding function used is Newton's method; in the case of insufficient convergence, the function falls back on Brent's method via ```scipy```'s ```brentq```. 
 - ```marketvols.py``` Contains various functions useful for calculating an option's volatility via its market price. Includes the ability to plot the volatility surface for an option which shows both the Black-Scholes implied volatility and yfinance's implied volatility. 
 

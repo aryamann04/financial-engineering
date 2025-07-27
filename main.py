@@ -19,7 +19,7 @@ from fixed_income.core.bootstrap import zc_yield, plot_zc_yields
 def main():
     while True:
         print("\n-----------------------------------------------")
-        print("\t\tMENU\t\t")
+        print("\t\t\tMENU\t\t\t")
         print("-----------------------------------------------")
         print("1. equity options")
         print("2. fixed income")

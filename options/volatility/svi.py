@@ -54,18 +54,15 @@ class SVI:
     def log_moneyness(self): 
         return np.log(self.strikes / (self.S_0 * np.exp((self.r - self.q) * self.T)))
     
-    def plot_svi(self, K=None): 
+    def plot_svi(self): 
         svi_vols = []
-        for K in self.strikes: 
-            svi_vols.append(self.svi_vol(K))
+        for strike in self.strikes: 
+            svi_vols.append(self.svi_vol(strike))
         
         _, ax = plt.subplots()
         ax.plot(self.strikes, self.implied_vols, label='black-scholes implied vol', marker='o', linestyle='-', color="blue")
         ax.plot(self.strikes, svi_vols, label='SVI-calibrated vols', marker='o', linestyle='--', color="orange")
-        ax.axvline(x=self.S_0, color='black', linestyle='--', label='current price')
-        
-        if K is not None: 
-            ax.axvline(x=K, color='red', linestyle='--', label='strike K')
+        ax.axvline(x=self.S_0, color='black', linestyle='--', label=f'current price: ${self.S_0:.2f}')
         
         ax.set_xlabel('strikes')
         ax.set_ylabel(f'implied vols (%)')
