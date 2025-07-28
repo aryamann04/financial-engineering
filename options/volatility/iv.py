@@ -3,32 +3,6 @@ from scipy.optimize import brentq, minimize_scalar
 from scipy.stats import norm 
 from options.core.pricing.pricing import bs_price
 
-def bs_iv_bq(market, S_0, K, T, r, q, option_type="call"): 
-    if market is None or np.isnan(market) or T <= 0:
-        return None
-
-    def objective(sigma):
-        return bs_price(S_0, K, T, r, sigma, q, option_type) - market
-
-    def loss(sigma):
-        return objective(sigma) ** 2
-
-    try:
-        initial = np.sqrt(2 * np.pi / T) * market / S_0
-        low = max(1e-6, initial * 0.5)
-        high = min(5.0, initial * 3.0)
-
-        if objective(low) * objective(high) < 0:
-            return brentq(objective, low, high)
-        else:
-            res = minimize_scalar(loss, bounds=(low, high), method='bounded')
-            if res.success:
-                return res.x
-            return None
-    except Exception as e:
-        return None
-
-# newton
 def bs_iv(market, S_0, K, T, r, q, option_type="call"):
     if market is None or np.isnan(market) or T <= 0:
         return None
@@ -60,9 +34,7 @@ def bs_iv(market, S_0, K, T, r, q, option_type="call"):
             sigma = 1e-4  
         if abs(increment) < 1e-9:
             return sigma
-
-    # if insufficient convergence fall back on brentq
-    sigma = bs_iv_bq(market, S_0, K, T, r, q, option_type)
-    return sigma
+    
+    return None
 
 

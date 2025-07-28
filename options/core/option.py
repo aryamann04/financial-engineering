@@ -133,6 +133,6 @@ class Option:
         return greeks
 
 # helper for strategies
-def create_option(ticker, r, T, K, n, sigma=None, option_type="call", position="long", 
+def create_option(ticker, T, K, n, sigma=None, option_type="call", position="long", 
                  creation_date=None, fetcher=None, market_match=True):
-    return Option(ticker, r, T, K, n, sigma, option_type, position, creation_date, fetcher, market_match)
+    return Option(ticker, T, K, n, sigma, option_type, position, creation_date, fetcher, market_match)

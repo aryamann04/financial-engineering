@@ -38,7 +38,7 @@ class OptionStrategy:
         else:
             market_match = True
         
-        option = create_option(self.ticker, self.r, self.T, strike_price, self.n, option_type=option_type, position=position, 
+        option = create_option(self.ticker, self.T, strike_price, self.n, option_type=option_type, position=position, 
                                creation_date=self.creation_date, fetcher=self.fetcher, market_match=market_match)
         itm_otm = ""
         percent_itm_otm = abs((strike_price - self.S_0) / self.S_0)

@@ -120,6 +120,7 @@ def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call", plot=True):
     else:
         options = option_chain.puts
 
+    options = options[(options.volume > 0) & (options.openInterest > 0)]
     strikes = options['strike'].values
 
     # yf implied vols 
@@ -153,7 +154,7 @@ def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call", plot=True):
                 implied_vols_bs.append(iv * 100)
     
     if not plot: 
-        return filtered_strikes_bs, implied_vols_bs, yf_prices
+        return filtered_strikes_yf, filtered_vols_yf, yf_prices
 
     _, ax = plt.subplots()
     ax.plot(filtered_strikes_yf, filtered_vols_yf, label='yfinance implied vol', marker='o', linestyle='-', color="blue")

@@ -79,7 +79,7 @@ def handle_equity_options():
             return
         
         # dummy option to generate plots
-        option = Option(ticker, T, 0, n, option_type='call')
+        option = Option(ticker, T, 100, n, option_type='call')
         plotsvi = input(f"plot SVI calibrated vols for {ticker} (yes/no)? ").strip().lower()
         if plotsvi == 'yes': 
             try: 
