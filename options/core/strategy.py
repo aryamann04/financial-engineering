@@ -7,15 +7,16 @@ from options.core.option import create_option
 from options.utilities.marketdata import MarketDataFetcher
 from options.utilities.printer import print_option_summary
 from options.volatility.marketvols import closest_K_T
+from fixed_income.core.bootstrap import zc_yield
 
 class OptionStrategy:
-    def __init__(self, ticker, T, rf, sigma=None, n=100, creation_date=None):
+    def __init__(self, ticker, T, sigma=None, n=100, creation_date=None):
         self.ticker = ticker
 
         _, self.exp = closest_K_T(ticker, 0, T) if isinstance(T, (int, float)) else (_, T)
         self.T = (datetime.strptime(self.exp, "%Y-%m-%d") - datetime.today()).days / 365.0 if isinstance(self.exp, str) else T
 
-        self.rf = rf
+        self.r = zc_yield(T)
         self.n = n
         self.creation_date = creation_date
 
@@ -37,7 +38,7 @@ class OptionStrategy:
         else:
             market_match = True
         
-        option = create_option(self.ticker, self.rf, self.T, strike_price, self.n, option_type=option_type, position=position, 
+        option = create_option(self.ticker, self.r, self.T, strike_price, self.n, option_type=option_type, position=position, 
                                creation_date=self.creation_date, fetcher=self.fetcher, market_match=market_match)
         itm_otm = ""
         percent_itm_otm = abs((strike_price - self.S_0) / self.S_0)

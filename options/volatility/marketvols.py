@@ -36,7 +36,7 @@ def yf_strikes(ticker_obj, T):
     chain = ticker_obj.option_chain(closest_expiry)
     return chain.calls["strike"].values
 
-def yf_option_price(ticker_obj, K, T, option_type="call"):
+def yf_option_price(ticker_obj, K, T, option_type="call", bidask=False):
     try:
         strike, expiry = closest_K_T(ticker_obj, K, T)
         if strike is None:
@@ -47,7 +47,10 @@ def yf_option_price(ticker_obj, K, T, option_type="call"):
         row = df[df["strike"] == strike]
 
         if not row.empty:
-            return row["lastPrice"].values[0], expiry
+            if bidask == True:
+                return row['bid'].values[0], row['ask'].values[0]
+            else: 
+                return (row['bid'].values[0] + row['ask'].values[0]) / 2, expiry
         return None, expiry
 
     except Exception:
@@ -87,6 +90,16 @@ def vol_skew(ticker_obj, expiry_years, strike):
 
     return (vol_hi - vol_lo) / ((strike + 5) - (strike - 5))
 
+def get_bid_asks(ticker_obj, T, strikes, option_type): 
+    bids = []
+    asks = []
+
+    for K in strikes: 
+        bid, ask = yf_option_price(ticker_obj, K, T, option_type, bidask=True)
+        bids.append(bid)
+        asks.append(ask)
+    
+    return bids, asks
 
 def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call", plot=True):
     today = datetime.today()
@@ -101,20 +114,17 @@ def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call", plot=True):
     expiry_date_str = min(option_dates, key=lambda x: abs(x - expiry_date)).strftime('%Y-%m-%d')
 
     option_chain = ticker_obj.option_chain(date=expiry_date_str)
-    calls = option_chain.calls
+    
+    if option_type =="call":
+        options = option_chain.calls
+    else:
+        options = option_chain.puts
 
-    strikes = calls['strike'].values
-
-    # yf implied vols 
-
-    implied_vols_yf = calls['impliedVolatility'].values
-    valid_indices = implied_vols_yf != 0
-    strikes = strikes[valid_indices]
-    implied_vols_yf = implied_vols_yf[valid_indices]
+    strikes = options['strike'].values
 
     # yf implied vols 
 
-    implied_vols_yf = calls['impliedVolatility'].values
+    implied_vols_yf = options['impliedVolatility'].values
     valid_indices = implied_vols_yf != 0
     strikes = strikes[valid_indices]
     implied_vols_yf = implied_vols_yf[valid_indices]
@@ -130,18 +140,20 @@ def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call", plot=True):
 
     implied_vols_bs = []
     filtered_strikes_bs = []
+    yf_prices = []
     for strike in strikes: 
-        yf_price, _ = yf_option_price(ticker_obj, strike, T, 'call')
+        yf_price, _ = yf_option_price(ticker_obj, strike, T, option_type)
         if yf_price is None:
             pass
         else:
             iv = bs_iv(yf_price, S_0, strike, T, r, q, option_type)
             if iv is not None and not np.isnan(iv):
+                yf_prices.append(yf_price)
                 filtered_strikes_bs.append(strike)
                 implied_vols_bs.append(iv * 100)
     
     if not plot: 
-        return filtered_strikes_bs, implied_vols_bs
+        return filtered_strikes_bs, implied_vols_bs, yf_prices
 
     _, ax = plt.subplots()
     ax.plot(filtered_strikes_yf, filtered_vols_yf, label='yfinance implied vol', marker='o', linestyle='-', color="blue")
@@ -150,7 +162,7 @@ def plot_vol_skew(ticker_obj, S_0, T, r, q, option_type="call", plot=True):
 
     ax.set_xlabel('strikes')
     ax.set_ylabel(f'implied vols (%)')
-    ax.set_title(f'Vol Skew for {ticker_obj.ticker} on {expiry_date_str}')
+    ax.set_title(f'Vol Skew for {ticker_obj.ticker} {option_type}s on {expiry_date_str}')
     ax.legend()
     ax.grid(True)
 

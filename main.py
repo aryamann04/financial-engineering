@@ -4,9 +4,11 @@ warnings.filterwarnings("ignore")
 
 from options.core.option import Option
 from options.core.strategy import OptionStrategy
+from options.core.analyzer import Analyzer
 from options.exotics.asian import AsianOption
 from options.exotics.digital import DigitalOption
 from options.exotics.range import SinglePeriodRangeAccrual
+from options.utilities.marketdata import MarketDataFetcher
 
 from fixed_income.core.bond import Bond
 from fixed_income.core.zcb import ZeroCouponBond
@@ -14,7 +16,7 @@ from fixed_income.derivatives.zcb_option import ZeroCouponBondOption
 from fixed_income.derivatives.caplet import Caplet
 from fixed_income.derivatives.floorlet import Floorlet
 from fixed_income.core.marketyields import plot_yield_curve
-from fixed_income.core.bootstrap import zc_yield, plot_zc_yields
+from fixed_income.core.bootstrap import plot_zc_yields
 
 def main():
     while True:
@@ -41,7 +43,7 @@ def handle_equity_options():
     print("\t\tEQUITY OPTIONS\t\t")
     print("-----------------------------------------------")
 
-    choice = input("enter 1 for vanilla options, 2 for exotics: ")
+    choice = input("enter 1 for vanilla options, 2 for exotics, 3 for analyzer: ")
 
     if choice == '1':
         print("\n-----------------------------------------------")
@@ -49,10 +51,9 @@ def handle_equity_options():
         print("-----------------------------------------------")
         ticker = input("stock ticker: ").upper().strip()
         T = get_yrs()
-        r = zc_yield(T)
         n = max(int(input("desired number of periods in the binomial model: ")), 10)
 
-        strategy = OptionStrategy(ticker, T, r, n)
+        strategy = OptionStrategy(ticker, T, n)
         print("\noption strategies available:")
     
         strategies = [
@@ -78,7 +79,7 @@ def handle_equity_options():
             return
         
         # dummy option to generate plots
-        option = Option(ticker, r, T, 0, n, option_type='call')
+        option = Option(ticker, T, 0, n, option_type='call')
         plotsvi = input(f"plot SVI calibrated vols for {ticker} (yes/no)? ").strip().lower()
         if plotsvi == 'yes': 
             try: 
@@ -99,7 +100,6 @@ def handle_equity_options():
         print("-----------------------------------------------")
         ticker = input("stock ticker: ").upper().strip()
         T = get_yrs()
-        r = zc_yield(T)
         
         print("\navailable exotics:")
         exotic_strategies = [
@@ -123,7 +123,7 @@ def handle_equity_options():
             digital_option_strike = input("strike : ")
             payoff_amount = input("payoff (notional): ")
 
-            digital_call_option = DigitalOption(ticker, r, T, digital_option_strike, option_type, payoff_amount)
+            digital_call_option = DigitalOption(ticker, T, digital_option_strike, option_type, payoff_amount)
             digital_call_option.price()
             digital_call_option.visualize_payoff()
 
@@ -133,7 +133,7 @@ def handle_equity_options():
             ra_strike_high = input("high strike: ")
             payoff_amount = input("payoff (notional): ")
 
-            single_period_range_accrual = SinglePeriodRangeAccrual(ticker, r, T, ra_strike_low, ra_strike_high, payoff_amount)
+            single_period_range_accrual = SinglePeriodRangeAccrual(ticker, T, ra_strike_low, ra_strike_high, payoff_amount)
             single_period_range_accrual.price()
             single_period_range_accrual.visualize_payoff()
 
@@ -141,12 +141,22 @@ def handle_equity_options():
             print("\n**** ASIAN OPTION ****")
             asian_option_strike = input("strike: ")
 
-            asian_call_option = AsianOption(ticker, r, T, asian_option_strike)
+            asian_call_option = AsianOption(ticker, T, asian_option_strike)
             asian_call_option.price()
 
         else:
             print("invalid choice: must be between 1 and {}".format(len(exotic_strategies)))
-        
+
+    elif choice == '3':
+        ticker = input("stock ticker: ").upper().strip()
+        T = get_yrs()
+        fetcher = MarketDataFetcher(ticker, T, creation_date=None)   
+
+        print(f"\nlaunching {ticker} options analyzer...\n")
+        analyzer = Analyzer(ticker, T, fetcher=fetcher)
+        analyzer.launch_analyzer()
+        analyzer.plot_vols()
+
     else:
         print("invalid choice: returning to menu.")
 

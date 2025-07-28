@@ -4,11 +4,12 @@ import matplotlib.pyplot as plt
 from options.utilities.marketdata import MarketDataFetcher
 from options.core.pricing.montecarlo import monte_carlo_range_accrual
 from options.core.pricing.pricing import single_period_range_accrual_bs_price
+from fixed_income.core.bootstrap import zc_yield
 
 class SinglePeriodRangeAccrual:
-    def __init__(self, ticker, r, T, K_low, K_up, coupon, sigma=None):
+    def __init__(self, ticker, T, K_low, K_up, coupon, sigma=None):
         self.ticker = ticker.upper()
-        self.r = r
+        self.r = zc_yield(T)
         self.T = T
         self.K_low = float(K_low)
         self.K_up = float(K_up)

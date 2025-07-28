@@ -4,11 +4,12 @@ import matplotlib.pyplot as plt
 from options.utilities.marketdata import MarketDataFetcher
 from options.core.pricing.montecarlo import monte_carlo_digital
 from options.core.pricing.pricing import digital_option_bs_price
+from fixed_income.core.bootstrap import zc_yield
 
 class DigitalOption:
-    def __init__(self, ticker, r, T, K, sigma=None, option_type="call", payoff_amount=1, position="long", creation_date=None):
+    def __init__(self, ticker, T, K, sigma=None, option_type="call", payoff_amount=1, position="long", creation_date=None):
         self.ticker = ticker
-        self.r = r
+        self.r = zc_yield(T)
         self.T = T
         self.K = K
         self.option_type = option_type

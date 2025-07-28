@@ -1,11 +1,12 @@
 import numpy as np
 from options.utilities.marketdata import MarketDataFetcher
 from options.core.pricing.montecarlo import monte_carlo_asian
+from fixed_income.core.bootstrap import zc_yield
 
 class AsianOption:
-    def __init__(self, ticker, r, T, K, sigma=None, option_type="call"):
+    def __init__(self, ticker, T, K, sigma=None, option_type="call"):
         self.ticker = ticker.upper()
-        self.r = r
+        self.r = zc_yield(T)
         self.T = T
         self.K = float(K)
         self.option_type = option_type

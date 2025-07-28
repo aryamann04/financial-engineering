@@ -57,5 +57,5 @@ class MarketDataFetcher:
     def actual_option_price(self, K, T, option_type="call"):
         return yf_option_price(self.yfTicker, K, T, option_type)
     
-    def plot_implied_vols(self, r=0, plot=True): 
-        return plot_vol_skew(self.yfTicker, self.current_price(), self.T, r, self.dividend_yield(), option_type="call", plot=plot)
+    def plot_implied_vols(self, r=0, option_type='call', plot=True): 
+        return plot_vol_skew(self.yfTicker, self.current_price(), self.T, r, self.dividend_yield(), option_type=option_type, plot=plot)

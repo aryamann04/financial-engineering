@@ -9,12 +9,13 @@ from options.volatility.iv import bs_iv
 from options.volatility.marketvols import closest_K_T
 from options.volatility.svi import SVI
 from options.utilities.printer import print_option_summary
+from fixed_income.core.bootstrap import zc_yield
 
 class Option:
-    def __init__(self, ticker, r, T, K, n, sigma=None, option_type="call", position="long", 
+    def __init__(self, ticker, T, K, n, sigma=None, option_type="call", position="long", 
                  creation_date=None, fetcher=None, market_match=True):
         self.ticker = ticker
-        self.r = r
+        self.r = zc_yield(T)
 
         if market_match:
             self.K, exp = closest_K_T(ticker, K, T) if isinstance(K, (int, float)) and isinstance(T, (int, float)) else (K, T)
@@ -36,12 +37,15 @@ class Option:
         self.hist_vol = self.fetcher.historical_volatility() 
         self.market_iv = self.fetcher.market_iv(K, T, option_type)
 
-        try: 
-            self.svi = SVI(self.S_0, self.T, self.r, self.q, self.fetcher)
-            self.sigma = self.svi.svi_vol(self.K)
-        except: 
-            print("error with calibrating SVI, using historical vol instead...")
-            self.sigma = self.hist_vol
+        if sigma is not None:
+            self.sigma = sigma
+        else:
+            try: 
+                self.svi = SVI(self.S_0, self.T, self.r, self.q, self.option_type, self.fetcher)
+                self.sigma = self.svi.svi_vol(self.K)
+            except: 
+                print("error with calibrating SVI, using historical vol instead...")
+                self.sigma = self.hist_vol
 
         self.greeks = self.calculate_greeks(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
         
