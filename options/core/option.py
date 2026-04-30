@@ -40,11 +40,15 @@ class Option:
         if sigma is not None:
             self.sigma = sigma
         else:
-            try: 
-                self.svi = SVI(self.S_0, self.T, self.r, self.q, self.option_type, self.fetcher)
-                self.sigma = self.svi.svi_vol(self.K)
-            except: 
-                print("error with calibrating SVI, using historical vol instead...")
+            self.svi = SVI(self.S_0, self.T, self.r, self.q, self.option_type,
+                           fetcher=self.fetcher)
+            svi_vol = self.svi.svi_vol(self.K)
+            if svi_vol is not None and svi_vol > 0:
+                self.sigma = svi_vol
+            else:
+                if self.svi.warnings:
+                    print(f"[SVI] {'; '.join(self.svi.warnings)}")
+                print("[SVI] falling back to historical vol")
                 self.sigma = self.hist_vol
 
         self.greeks = self.calculate_greeks(self.S_0, self.K, self.T, self.r, self.sigma, self.q, self.option_type)
@@ -92,7 +96,8 @@ class Option:
 
     @property
     def bs_iv(self):
-        if self.market and not np.isnan(self.market):
+        # Bug fix: `if self.market` is falsy for price=0.0; use explicit None check
+        if self.market is not None and np.isfinite(self.market) and self.market > 0:
             return bs_iv(self.market, self.S_0, self.K, self.T, self.r, self.q, self.option_type)
         return None
     

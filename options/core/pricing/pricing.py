@@ -4,6 +4,11 @@ from scipy.stats import norm
 # European option Black-Scholes pricing 
 
 def bs_price(S, K, T, r, sigma, q=0, option_type="call"):
+    # Guard: sigma=0 → return discounted intrinsic (avoids divide-by-zero in d1)
+    if sigma < 1e-10:
+        if option_type == "call":
+            return max(S * np.exp(-q * T) - K * np.exp(-r * T), 0.0)
+        return max(K * np.exp(-r * T) - S * np.exp(-q * T), 0.0)
     d1 = (np.log(S / K) + (r - q + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
     if option_type == "call":
