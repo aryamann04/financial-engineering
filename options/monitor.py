@@ -480,7 +480,7 @@ def recommend_options_watchlist(t_days: int = 30, ttl_seconds: int = 900) -> lis
         try:
             updated_at = datetime.strptime(cached_ts, "%Y-%m-%d %H:%M:%S")
             if now - updated_at <= timedelta(seconds=ttl_seconds):
-                symbols = payload.get("symbols") or []
+                symbols = [s for s in (payload.get("symbols") or []) if s != "SPX"]
                 if symbols:
                     return symbols
         except Exception:

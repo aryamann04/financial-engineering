@@ -24,7 +24,7 @@ try:
     from textual import work
     from textual.app import App, ComposeResult
     from textual.binding import Binding
-    from textual.widgets import DataTable, Footer, Header, Input, Static, TabbedContent, TabPane
+    from textual.widgets import Footer, Header, Input, Static, TabbedContent, TabPane
 
     _TEXTUAL_AVAILABLE = True
 except ImportError:
@@ -166,7 +166,7 @@ def launch_options_workspace(symbol: str | None = None) -> None:
 
     settings = load_settings()
     watchlists = load_watchlists()
-    symbol = (symbol or settings.default_options_symbol or (watchlists.options[0] if watchlists.options else "SPY")).upper()
+    symbol = (symbol or (watchlists.options[0] if watchlists.options else None) or settings.default_options_symbol or "SPY").upper()
     if _OPTIONS_TEXTUAL_AVAILABLE and settings.use_tui and settings.tui_enabled:
         result = run_options_tui(symbol=symbol, watchlist=watchlists.options, db_path=settings.db_path, t_days=settings.options_default_t_days)
         if isinstance(result, dict) and result.get("action") == "journal":
@@ -197,9 +197,8 @@ if _TEXTUAL_AVAILABLE:
         CSS = """
         Screen { background: $surface; }
         TabbedContent { height: 1fr; }
-        TabPane { padding: 0 1; overflow-y: auto; }
-        Static { padding: 0 1; }
-        DataTable { height: 1fr; }
+        TabPane { padding: 1 2; overflow-y: auto; }
+        Static { padding: 0 1; width: 1fr; }
         #watchlist-editor { height: auto; }
         """
 
@@ -223,13 +222,15 @@ if _TEXTUAL_AVAILABLE:
             self.settings = load_settings()
             self._options_entries = []
             self._futures_entries = []
+            self._options_panel = Panel(Text("Loading..."))
+            self._futures_panel = Panel(Text("Loading..."))
 
         def compose(self) -> ComposeResult:
             yield Header(show_clock=True)
             with TabbedContent("Dashboard", "Options", "Futures", "Watchlists", "Journal", "Performance", "Help", id="tabs"):
                 yield TabPane("Dashboard", Static("[dim]Loading dashboard…[/dim]", id="pane-dashboard"), id="tab-dashboard")
-                yield TabPane("Options", DataTable(id="table-options"), id="tab-options")
-                yield TabPane("Futures", DataTable(id="table-futures"), id="tab-futures")
+                yield TabPane("Options", Static("[dim]Loading options…[/dim]", id="pane-options"), id="tab-options")
+                yield TabPane("Futures", Static("[dim]Loading futures…[/dim]", id="pane-futures"), id="tab-futures")
                 with TabPane("Watchlists", id="tab-watchlists"):
                     yield Static(
                         "[bold]Watchlists[/bold]\nEdit comma-separated symbols and press [cyan]s[/cyan] to save.",
@@ -245,23 +246,13 @@ if _TEXTUAL_AVAILABLE:
 
         def on_mount(self) -> None:
             self.title = "Unified Analyzer"
-            self._init_tables()
             self._refresh_all()
-
-        def _init_tables(self) -> None:
-            options_table = self.query_one("#table-options", DataTable)
-            futures_table = self.query_one("#table-futures", DataTable)
-            options_table.cursor_type = "row"
-            futures_table.cursor_type = "row"
-            options_table.add_columns("Symbol", "Price", "Regime", "ATM IV", "Conf", "Signal")
-            futures_table.add_columns("Ticker", "Price", "Bias", "Conf", "VWAP", "Idea")
 
         def _help_text(self) -> str:
             return (
                 "[bold]Keyboard Guide[/bold]\n\n"
                 "[cyan]← / →[/cyan] switch tabs\n"
-                "[cyan]↑ / ↓[/cyan] move through watchlist rows\n"
-                "[cyan]Enter[/cyan] open selected options/futures instrument\n"
+                "[cyan]Enter[/cyan] open the lead options/futures symbol from the active tab\n"
                 "[cyan]o[/cyan] open first options watchlist symbol\n"
                 "[cyan]f[/cyan] open first futures watchlist symbol\n"
                 "[cyan]s[/cyan] save watchlists from the Watchlists tab\n"
@@ -277,13 +268,15 @@ if _TEXTUAL_AVAILABLE:
             journal = build_trades_table_text(_DB.get_all_trades(), max_rows=20)
             performance = build_full_dashboard_text(compute_metrics(_DB.get_all_trades()))
             self.call_from_thread(self._apply_dashboard, dashboard)
+            self.call_from_thread(self._apply_options_pane, dashboard)
             self.call_from_thread(self._apply_journal, journal)
             self.call_from_thread(self._apply_performance, performance)
-            self.call_from_thread(self._apply_tables)
 
         def _build_dashboard_renderable(self):
             options_panel, options_entries = _render_options_watchlist_panel()
             futures_panel, futures_entries = _render_futures_watchlist_panel()
+            self._options_panel = options_panel
+            self._futures_panel = futures_panel
             self._options_entries = options_entries
             self._futures_entries = futures_entries
             return Group(_render_macro_panel(), _render_news_panel(), options_panel, futures_panel)
@@ -291,42 +284,15 @@ if _TEXTUAL_AVAILABLE:
         def _apply_dashboard(self, renderable) -> None:
             self.query_one("#pane-dashboard", Static).update(renderable)
 
+        def _apply_options_pane(self, _renderable) -> None:
+            self.query_one("#pane-options", Static).update(self._options_panel)
+            self.query_one("#pane-futures", Static).update(self._futures_panel)
+
         def _apply_journal(self, text: str) -> None:
             self.query_one("#pane-journal", Static).update(text)
 
         def _apply_performance(self, text: str) -> None:
             self.query_one("#pane-performance", Static).update(text)
-
-        def _apply_tables(self) -> None:
-            options_table = self.query_one("#table-options", DataTable)
-            futures_table = self.query_one("#table-futures", DataTable)
-            options_table.clear(columns=False)
-            futures_table.clear(columns=False)
-            for entry in self._options_entries:
-                options_table.add_row(
-                    entry.symbol,
-                    format_price(entry.price),
-                    entry.regime,
-                    format_percent(entry.atm_iv * 100 if entry.atm_iv is not None else None, decimals=1),
-                    entry.confidence,
-                    entry.signal,
-                )
-            for entry in self._futures_entries:
-                futures_table.add_row(
-                    entry.symbol,
-                    format_price(entry.price),
-                    entry.bias,
-                    entry.confidence,
-                    "Above" if entry.above_vwap else ("Below" if entry.above_vwap is not None else "N/A"),
-                    entry.best_idea or "-",
-                )
-
-        def _selected_symbol(self, table_id: str) -> str | None:
-            table = self.query_one(table_id, DataTable)
-            if table.row_count == 0 or table.cursor_row is None:
-                return None
-            row = table.get_row_at(table.cursor_row)
-            return str(row[0]) if row else None
 
         def action_prev_tab(self) -> None:
             tabs = self.query_one("#tabs", TabbedContent)
@@ -358,16 +324,16 @@ if _TEXTUAL_AVAILABLE:
             tabs = self.query_one("#tabs", TabbedContent)
             active = tabs.active[4:] if tabs.active else "dashboard"
             if active == "options":
-                symbol = self._selected_symbol("#table-options")
+                symbol = self._options_entries[0].symbol if self._options_entries else None
                 if symbol:
                     self.exit(result={"action": "options", "symbol": symbol})
             elif active == "futures":
-                symbol = self._selected_symbol("#table-futures")
+                symbol = self._futures_entries[0].symbol if self._futures_entries else None
                 if symbol:
                     self.exit(result={"action": "futures", "symbol": symbol})
 
         def action_open_options(self) -> None:
-            symbol = (self.watchlists.options[0] if self.watchlists.options else self.settings.default_options_symbol or "SPY").upper()
+            symbol = ((self.watchlists.options[0] if self.watchlists.options else None) or self.settings.default_options_symbol or "SPY").upper()
             self.exit(result={"action": "options", "symbol": symbol})
 
         def action_open_futures(self) -> None:

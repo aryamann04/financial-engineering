@@ -1,163 +1,355 @@
-# financial-engineering
+# Trade Terminal
 
-- [Installation Guide](#installation-guide)
-- [Equity Options](#equity-options)
-  - [Option Strategies](#option-strategies)
-  - [Greeks](#greeks)
-  - [Exotics](#exotics)
-  - [Volatility](#volatility)
-- [Fixed Income](#fixed-income)
-  - [Bonds and Bootsrapping](#bond)
-  - [Zero Coupon Bonds](#zero-coupon-bonds-and-options-on-zcbs)
-  - [Caplets and Floorlets](#caplets-and-floorlets)
-  - [Yield Curve](#current-bonds-and-yield-curve)
+A unified terminal-based system for futures and options analysis, built around an integrated analytics pipeline and a persistent trade journal.
 
-## Installation Guide
-To install and use this tool on your computer, follow these steps:
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white)
 
-### **Step 1: Clone the Repository**
-```sh
-git clone https://github.com/aryamann04/financial-engineering.git
-cd financial-engineering
+---
+
+## Overview
+
+Trade Terminal launches a single entry point that routes into two fully-featured TUI workspaces — one for futures, one for options — plus a trade journal and performance dashboard. The system is built around a `UnifiedAnalyzerApp` (Textual) that serves as the hub, with each workspace running its own analytics pipeline on demand.
+
+The options workspace runs a multi-stage pipeline: option chain fetch → BS implied vol computation → SVI surface calibration → dealer GEX model → intraday regime detection → FRED macro screen. The futures workspace runs a parallel pipeline: OHLCV fetch → ATR/EMA/VWAP → session levels (Asia/London/NY) → fair value gap detection → volume profile → bias engine → trade idea generation. All sessions share a single SQLite journal with per-trade R-multiple tracking, ATR hit rates, and performance breakdowns.
+
+---
+
+## Features
+
+### Unified Hub
+- 7-tab Textual TUI: Dashboard, Options, Futures, Watchlists, Journal, Performance, Help
+- Dashboard aggregates macro context (VIX, DXY, 10Y yield, sector ETFs), live news sentiment, and watchlist snapshots for both asset classes
+- Watchlists for both options and futures are persisted and editable in-app
+- Keyboard-driven navigation with hotkeys for direct workspace access (`o`, `f`, `j`, `d`)
+
+### Options Workspace (13 tabs)
+- **Option chain**: calls, puts, and straddle tables with market IV, SVI model IV, bid/ask, and BUY/SELL/REVIEW action signals based on model–market edge
+- **SVI surface**: Stochastic Volatility Inspired calibration for calls and puts; 25Δ risk reversal, butterfly, put/call skew slopes, IV term structure across nearest expirations
+- **Dealer GEX model**: net dealer gamma exposure in $B, gamma flip point, call/put walls, charm (Δ/day), vanna (Δ/vol-pt), max pain, max gamma strike
+- **Regime detection**: intraday classification — TREND UP, TREND DOWN, CHOP, COMPRESSION, EXTENDED UP/DOWN — using EMA9/21/50 stack and VWAP deviation; RV/IV ratio
+- **Volume analytics**: put/call volume ratio, unusual volume flags (vol/OI ≥ 1.25×), top strikes by volume and OI
+- **FRED macro screen**: yield curve (10Y–2Y), IG/HY credit spreads, CPI, UNRATE, NFCI, SOFR/EFFR (requires free FRED API key)
+- **Tactical interpretation**: mechanical plain-English summary derived from regime, GEX regime, RV/IV ratio, 25Δ RR, butterfly, and GEX level proximity
+- **Monitor tab**: watchlist snapshot table (symbol, price, regime, ATM IV, RR, GEX, confidence, sentiment, signal)
+- Symbol cycling within watchlist with `[` / `]`; manual refresh with `r`
+
+### Futures Workspace (8 tabs)
+- **Session levels**: previous day H/L/C, today H/L, Asia/London/NY session H/L, NY open range H/L, VWAP; ATR targets at 1×/2×/3× for both directions
+- **ATR computation**: EMA-based 5m and 15m ATR; trend classification per timeframe (bullish/bearish/neutral/mixed)
+- **Fair value gaps (FVGs)**: detected across 5m, 15m, and 1h timeframes; sized relative to ATR, fill percentage, age in bars, proximity to spot
+- **Volume profile**: POC, VAH, VAL (70% value area), relative volume; high/low volume node identification
+- **Bias engine**: multi-factor scoring across trend alignment, VWAP position, session levels, volume nodes, and FVGs; outputs `BiasResult` (bullish/bearish/mixed/neutral) with confidence (high/medium/low), bull/bear signal lists, and cautions
+- **Confluence zones**: clusters of named levels within a configurable ATR tolerance; typed as support/resistance
+- **Trade ideas**: auto-generated from bias + levels + FVGs + volume profile + pullback zones; includes entry zone, stop (invalidation), 1×/2×/3× ATR targets, setup type, and entry reasons
+- **Exit guidance**: when an open trade is detected in the journal, computes unrealized R, distance to stop and target, next barrier, and proximity to ATR multiples
+- **Multi-ticker monitor**: watchlist table with price, daily Δ%, 5m/15m/1h trend, bias, confidence, VWAP position, volume spike flag, ATR regime, best idea
+
+### Trade Journal
+- SQLite database at `~/.financial-engineering/trades.db`
+- Separate schemas for `FuturesTrade` and `OptionsTrade`; trade lifecycle states: `planned`, `open`, `closed`, `cancelled`
+- Computed fields: P&L (points and dollars), R-multiple, holding period, session bucket, time-of-day bucket, ATR hit rates (1×/2×/3×)
+- Structured metadata: setup type, timeframe, mistake tags, planned vs impulsive, bias/confidence at entry, FVG/volume node/session level involvement, confluence score
+- Daily review entries with psychological notes, best/worst setup, mistake tags
+- Performance metrics: win rate, profit factor, expectancy, avg/median R, max drawdown; breakdowns by ticker, setup, timeframe, session, time-of-day, confluence score, bias alignment, planned vs impulsive, reason for entry
+
+### Fixed Income (standalone)
+- Bond pricing with bootstrapped discount factors from live Treasury yield curve data
+- Zero coupon bonds and options on ZCBs (binomial tree)
+- Caplets, floorlets, swaps, swaptions
+- Treasury yield curve and bootstrapped zero coupon yields via Treasury.gov
+
+---
+
+## Architecture
+
 ```
-
-### **Step 2: Install Dependencies**
-This project requires Python 3 and additional libraries. Install them using:
-```sh
-pip install -r requirements.txt
-```
-
-### **Step 3: Running the Program**
-To start the interactive financial tool, run:
-```sh
 python main.py
+    └── analyzer.unified.run_unified_analyzer()
+            └── UnifiedAnalyzerApp (Textual, 7 tabs)
+                    ├── Dashboard tab
+                    │     ├── analyzer.macro   — VIX, DXY, 10Y, XLK, XLF snapshots
+                    │     ├── analyzer.news    — news + sentiment aggregation
+                    │     ├── options.monitor  — options watchlist snapshots
+                    │     └── futures.monitor  — futures watchlist snapshots
+                    │
+                    ├── Options tab → OptionsTUI (Textual, 13 tabs)
+                    │     └── options.core.analyzer.Analyzer
+                    │           ├── options.volatility.marketvols  — chain fetch, BS IVs
+                    │           ├── options.volatility.svi         — SVI calibration
+                    │           ├── options.analytics.regime       — intraday regime
+                    │           ├── options.analytics.gamma_model  — dealer GEX
+                    │           ├── options.analytics.macro_screen — FRED indicators
+                    │           └── fixed_income.core.bootstrap    — risk-free rate
+                    │
+                    ├── Futures tab → FuturesTUI (Textual, 8 tabs)
+                    │     ├── futures.data     — OHLCV fetch + session parsing
+                    │     ├── futures.levels   — ATR, EMA, VWAP, session levels
+                    │     ├── futures.volume   — volume profile (POC, VAH, VAL)
+                    │     ├── futures.fvg      — FVG detection across timeframes
+                    │     ├── futures.bias     — bias engine + confluence zones
+                    │     ├── futures.ideas    — trade idea generation
+                    │     └── futures.signals  — alerts + exit guidance
+                    │
+                    ├── Journal tab  ─┐
+                    └── Performance  ─┴─ journal.storage / journal.metrics / journal.dashboard
+```
+
+The `Analyzer` class loads all data on construction via a 4-way `ThreadPoolExecutor` (chain, intraday, dividend yield, macro screen in parallel) and exposes a thread-safe `refresh()` / `start_refresh()` interface for background updates while the TUI remains interactive.
+
+---
+
+## Project Structure
+
+```
+financial-engineering/
+├── main.py                      # entry point — bootstraps venv, calls run_unified_analyzer()
+├── requirements.txt
+│
+├── analyzer/                    # unified hub + shared utilities
+│   ├── unified.py               # UnifiedAnalyzerApp + run_unified_analyzer()
+│   ├── macro.py                 # VIX/DXY/yield/sector snapshots
+│   ├── news.py                  # news fetch + sentiment
+│   ├── watchlists.py            # options/futures watchlist persistence (JSON)
+│   ├── data.py                  # TTL-cached yfinance history wrapper
+│   └── formatting.py            # price/percent formatting
+│
+├── options/
+│   ├── tui.py                   # OptionsTUI — 13-tab Textual app
+│   ├── monitor.py               # options watchlist snapshot builder
+│   ├── snapshot.py              # lightweight cached options snapshot
+│   ├── core/
+│   │   ├── analyzer.py          # Analyzer class — full options pipeline
+│   │   ├── option.py            # Option pricing primitives
+│   │   ├── strategy.py          # multi-leg strategy builder
+│   │   └── pricing/
+│   │       ├── pricing.py       # Black-Scholes + binomial pricing
+│   │       └── montecarlo.py    # Monte Carlo simulation
+│   ├── volatility/
+│   │   ├── iv.py                # BS IV (Newton + Brent fallback)
+│   │   ├── svi.py               # SVI surface calibration
+│   │   └── marketvols.py        # chain fetch, BS IV batch computation, vol surface
+│   ├── analytics/
+│   │   ├── regime.py            # intraday regime classification
+│   │   ├── gamma_model.py       # dealer GEX model (flip, walls, charm, vanna)
+│   │   ├── gamma_zones.py       # OI ladder + pin zone heuristic
+│   │   ├── macro_screen.py      # FRED API macro indicators
+│   │   └── visualizer.py        # matplotlib charts (dashboard, OI ladder)
+│   ├── exotics/
+│   │   ├── asian.py             # Asian options (MC)
+│   │   ├── digital.py           # digital call/put
+│   │   └── range.py             # range accruals
+│   └── utilities/
+│       ├── marketdata.py        # MarketDataFetcher (spot, div yield, chain)
+│       └── printer.py           # tabular output helpers
+│
+├── futures/
+│   ├── tui.py                   # FuturesTUI — 8-tab Textual app
+│   ├── cli.py                   # futures workspace CLI + trade planner
+│   ├── monitor.py               # multi-ticker watchlist monitor
+│   ├── data.py                  # FuturesData fetch (spot, 5m/1h OHLCV, sessions)
+│   ├── levels.py                # session levels, VWAP, ATR, trend
+│   ├── atr.py                   # ATR computation + EMA + 15m resample
+│   ├── volume.py                # volume profile (POC, VAH, VAL, relative vol)
+│   ├── fvg.py                   # FairValueGap detection
+│   ├── bias.py                  # BiasResult, ConfluenceZone, PullbackZone
+│   ├── ideas.py                 # TradeIdea generation
+│   ├── signals.py               # AlertMessage, ExitGuidance
+│   └── planner.py               # R-multiple assessment, trade plan formatting
+│
+├── journal/
+│   ├── models.py                # FuturesTrade, OptionsTrade, DailyReview dataclasses
+│   ├── storage.py               # TradeDatabase — SQLite CRUD
+│   ├── metrics.py               # PerformanceMetrics computation
+│   ├── dashboard.py             # Rich text renderers for journal/performance views
+│   └── cli.py                   # interactive journal menus
+│
+├── config/
+│   ├── settings.py              # Settings dataclass + JSON persistence
+│   ├── tickers.py               # FUTURES_TICKER_MAP + CONTRACT_SPECS
+│   └── sessions.py              # session/time-of-day label helpers
+│
+├── fixed_income/
+│   ├── core/
+│   │   ├── bond.py              # Bond pricing (bootstrapped discount factors)
+│   │   ├── bootstrap.py         # ZC yield curve bootstrapping from Treasury.gov
+│   │   ├── marketyields.py      # live Treasury yield curve fetch + cache
+│   │   ├── fred_client.py       # FRED API client
+│   │   └── zcb.py               # ZeroCouponBond (binomial tree)
+│   └── derivatives/
+│       ├── caplet.py            # Caplet pricing
+│       ├── floorlet.py          # Floorlet pricing
+│       ├── swap.py              # Interest rate swap
+│       ├── swaption.py          # Swaption
+│       └── zcb_option.py        # Option on ZCB
+│
+└── tests/
+    ├── test_iv.py               # IV inversion correctness
+    ├── test_futures.py          # futures levels, ATR, FVG, bias, ideas
+    └── test_analytics.py        # regime, GEX model, macro screen
 ```
 
 ---
 
-## Functionalities 
-### Equity Options
+## Tech Stack
 
-### Equity Option Strategies 
-- ```strategy.py``` Price and visualize various option strategies on a ticker of your choice. Will output the options made, along with key information such as their Black-Scholes price, market price, and greeks. You are able to intricately customize the strategies by entering the strikes for each constituent option of an option strategy, allowing you to experiment with asymmetric positions. Both the Black-Scholes price and market price of the strategy are printed as well as the breakeven points on the profit & loss plot. The greeks of the overall strategy are also printed. Strategies available include:
-  
-  - ```atm_call()```
-  - ```itm_call()```
-  - ```otm_call()```
-  - ```short_atm_call()```
-  - ```short_itm_call()```
-  - ```short_otm_call()```
-    
-  - ```atm_put()```
-  - ```itm_put()```
-  - ```otm_put()```
-  - ```short_atm_put()```
-  - ```short_itm_put()```
-  - ```short_otm_put()```
-    
-  -  ```covered_call()```
-  -  ```married_put()```
+| Layer | Libraries |
+|---|---|
+| TUI framework | `textual >= 0.52.0`, `rich` |
+| Market data | `yfinance`, `curl_cffi` |
+| Numerics | `numpy`, `pandas`, `scipy` |
+| Charting | `matplotlib` |
+| HTTP / scraping | `requests`, `beautifulsoup4` |
+| Table formatting | `tabulate` |
+| Storage | `sqlite3` (stdlib) |
+| Rates data | Treasury.gov (scrape), FRED API (optional) |
 
-  -  ```bull_call_spread()```
-  -  ```bear_put_spread()```
-  - ```call_credit_spread()```
-  - ```put_credit_spread()```
-    
-  -  ```protective_collar()```
-  -  ```long_straddle()```
-  -  ```long_strangle()```
-  -  ```short_straddle()```
-  -  ```short_strangle()```
-    
-  -  ```long_call_butterfly_spread()```
-  -  ```long_put_butterfly_spread()```
-  -  ```iron_condor()```
+---
 
-<img width="500" height="300" alt="PLTR Iron Condor" src="https://github.com/user-attachments/assets/3923f163-ca2e-41e7-9a0d-fd0a9a069c6e" />
-<img width="500" height="300" alt="PLTR ATM Call" src="https://github.com/user-attachments/assets/0e5e085e-5049-4569-880e-cdd15bac25fd" />
+## Setup
 
-- ```pricing.py``` Prices options with the binomial model as well as the Black Scholes model. Given a ticker, the current stock price and dividend yield are retrieved via the yfinance library. The user enters the strike price, time to expiry, and option type ("call" or "put") as well as the number of periods for the binomial model. The volatility parameter is proxied by historical volatility (standard deviation) of the stock's price across a time period proportional to that of the option's life. The program outputs the price calculated by the binomial model (both European and American), the Black-Scholes price, the current actual market price of the option, and the implied volatility.
+**Prerequisites**: Python 3.11+
 
-### Greeks
+```bash
+git clone https://github.com/aryamann04/financial-engineering.git
+cd financial-engineering
 
-Greeks of individual options as well as multi-leg options strategies are calculated and printed upon execution of a strategy. Analytical formulas (partial derivatives of the Black-Scholes formula) are used to calculate:
-- ```delta```: sensitivity of the option's price to movement underlying stock price
-- ```gamma```: sensitivity of the option's delta to movement underlying stock price (second derivative of the Black-Scholes price with respect to the underlying stock price)
-- ```theta```: how quickly the option price decays as time passes
-- ```vega```: sensitivity of the option's price to movement in the volatility of the underlying stock
-- ```rho```: sensitivity of the option's price to movement in interest rates  
-These values are essential when hedging an option or multi-leg option strategy. 
+python -m venv .venv
+source .venv/bin/activate       # Windows: .venv\Scripts\activate
 
-### Exotics 
-
-- ```exotics.py```  Price digital call/put options, single period range accruals, and Asian options with the Black-Scholes model and Monte Carlo simulation.  
-<img width="600" alt="Screenshot 2024-06-25 at 9 24 02 PM" src="https://github.com/aryamann04/financial-engineering/assets/140534650/7d51d623-9359-480c-bfa6-4795e1982620">
-
-### Volatility
-
-- ```svi.py``` The model uses the Stochastic Inspired Volatility (SVI) model to generate input volatilities for the Black-Scholes models. For a particular given expiry date, SVI uses the implied volatilties (derived via the market prices for options available on yfinance) to fit a smooth curve across all strikes. The option pricing engine uses this curve to find the desired volatility for a given strike K and uses this as an input (sigma) for the Black-Scholes model.
-<img width="628" height="465" alt="SVI curve" src="https://github.com/user-attachments/assets/2bf1c76d-de5a-4f38-af61-319a037cb39d" />
-
-- ```iv.py``` The function ```bs_iv``` calculates the implied volatility of an option from its market price (via yfinance). The primary root-finding function used is Newton's method; in the case of insufficient convergence, the function falls back on Brent's method via ```scipy```'s ```brentq```. 
-- ```marketvols.py``` Contains various functions useful for calculating an option's volatility via its market price. Includes the ability to plot the volatility surface for an option which shows both the Black-Scholes implied volatility and yfinance's implied volatility. 
-
-### Fixed Income
-- The main components of this section include ```Bond```, ```ZeroCouponBond```, ```ZeroCouponBondOption```, ```Caplet```, and ```Floorlet```. Each class offers methods to construct interest rate trees, calculate instrument prices using the binomial model, and print the trees for visualization.
-
-### Bond 
-- ```bond.py``` Price a bond with various parameters. You can pick the issue date, maturity date (or time to maturity), purchase date, coupon rate, and coupon frequency. The pricing utilizes bootstrapped discount factors from the current treasury yield curve. In addition to getting data on clean/dirty price, get the values of modified duration (cash-weighted time to maturity), PV01 (estimated price change per basis point change in yields) and bond convexity. There is also an option to graph clean and dirty prices across the life of the bond. 
-
-<img width="400" height="420" alt="bonds_example_output" src="https://github.com/user-attachments/assets/66c97e60-902e-42e9-8f96-145931f9f9e4" />
-<img width="600" height="300" alt="clean_dirty_price" src="https://github.com/user-attachments/assets/59afb434-7e78-42d2-b6b4-2cad48020316" />
-
-#### Zero Coupon Bonds and Options on ZCBs
-```python
-face_value = 100
-T = 4  # bond maturity in years
-r_0 = 0.06
-u = 1.25
-d = 0.9
-
-zcb_4y = ZeroCouponBond(face_value, T, r_0, u, d)
-zcb_4y.price()
-zcb_4y.print_bond_tree()
-zcb_4y.print_interest_tree()
-
-zcb_option_expiry = 2
-zcb_option_strike = 84
-
-zcb_4y_2yoption = ZeroCouponBondOption(zcb_4y, zcb_option_strike, zcb_option_expiry)
-zcb_4y_2yoption.price()
-zcb_4y_2yoption.print_option_tree()
+pip install -r requirements.txt
 ```
 
-#### Caplets and Floorlets
-```python
-cf_expiry = 6
-cf_notional = 1000  # notional amount in dollars
-caplet_strike = 0.02
-floorlet_strike = 0.08
+**Optional — FRED macro indicators** (free API key):
 
-caplet_6y = Caplet(r_0, caplet_strike, cf_expiry, u, d, cf_notional)
-caplet_6y.price()
-caplet_6y.print_caplet_tree()
-caplet_6y.print_interest_tree()
-
-floorlet_6y = Floorlet(r_0, floorlet_strike, cf_expiry, u, d, cf_notional)
-floorlet_6y.price()
-floorlet_6y.print_floorlet_tree()
-floorlet_6y.print_interest_tree()
+```bash
+export FRED_API_KEY=your_key_here
 ```
 
-The following is an example of the binomial price tree output for the zero coupon bond.
+Get a key at [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html). Without it, the Macro tab displays a setup prompt and the rest of the app functions normally.
 
-<img width="480" alt="Screenshot 2024-06-23 at 1 55 48 AM" src="https://github.com/aryamann04/options/assets/140534650/178e6eea-5221-4a83-81c2-9251069961c9">
+---
 
-### Current Bonds and Yield Curve
+## Usage
 
-- ```marketyields.py``` Get live information on U.S. treasury yield (1, 2, 3, 4, 6 months; 1, 2, 3, 5, 7, 10, 20, 30 years) and view the state of the current yield curve.
-- ```bootstrap.py``` Plot bootstrapped zero coupon yields using live treasury yield data. These yields are used as the risk-free rate input into the binomial and Black-Scholes models, and the discount factors are used to price bonds.
+```bash
+python main.py
+```
 
-<img width="500" height="280" alt="zc_yields" src="https://github.com/user-attachments/assets/5655e9ff-7c7c-4bf2-acfb-3a159ad4b6e8" />
-<img width="500" height="280" alt="treasury_curve" src="https://github.com/user-attachments/assets/cd35c486-7fbe-4a60-9ab9-93addafe741d" />
+This launches the unified Textual TUI. The app auto-bootstraps the `.venv` if present and `FE_SKIP_VENV_BOOTSTRAP` is not set.
 
+Alternatively, run the analyzer package directly:
+
+```bash
+python -m analyzer
+```
+
+### Keyboard Reference
+
+**Unified Hub**
+
+| Key | Action |
+|---|---|
+| `←` / `→` | Switch tabs |
+| `o` | Open options workspace (first watchlist symbol) |
+| `f` | Open futures workspace (first watchlist symbol) |
+| `j` | Open journal menu |
+| `d` | Open performance dashboard |
+| `r` | Refresh all data |
+| `s` | Save watchlist edits (from Watchlists tab) |
+| `q` | Quit |
+
+**Options Workspace**
+
+| Key | Action |
+|---|---|
+| `←` / `→` | Switch tabs |
+| `[` / `]` | Previous / next watchlist symbol |
+| `r` | Force full refresh |
+| `l` | Log an options trade |
+| `p` | Plan a trade |
+| `j` | Open journal |
+| `q` | Quit to hub |
+
+**Futures Workspace**
+
+| Key | Action |
+|---|---|
+| `←` / `→` | Switch tabs |
+| `[` / `]` | Previous / next watchlist symbol |
+| `↑` / `↓` | Navigate trade ideas |
+| `Enter` | Plan from selected idea |
+| `r` | Refresh |
+| `l` | Log a futures trade |
+| `p` | Plan a trade |
+| `j` | Open journal |
+| `q` | Quit to hub |
+
+---
+
+## Example Workflow
+
+**1. Morning review in the hub**
+
+Open the app with `python main.py`. The Dashboard tab loads macro context (VIX, DXY, 10Y yield, XLK, XLF) and news sentiment for SPY alongside your watchlist snapshots. Press `r` to refresh.
+
+**2. Futures pre-market setup (MES)**
+
+Press `f` to enter the futures workspace on MES (or the first symbol in your futures watchlist). Check the Levels tab for prev day H/L, Asia/London ranges, and the NY open range boundaries. Review the Bias tab for the multi-factor bias score, confluence zones, and pullback watch zones. The Ideas tab surfaces specific setups (e.g. "Asia High Breakout") with entry zone, invalidation level, and ATR targets.
+
+**3. Options analysis (SPY)**
+
+Press `q` to return to the hub, then `o` for the options workspace. Start on the Overview tab (ATM IV, regime, GEX regime, signal, confidence). Navigate to Summary for the full GEX model readout and tactical interpretation. Check the Gamma tab for the gamma flip point, call/put walls, charm, and vanna. Use the Surface tab for the IV term structure and 25Δ risk reversal.
+
+**4. Log a trade**
+
+From either workspace, press `l` to open the trade log prompt. The futures planner pre-fills ATR values and prompts for direction, entry, stop, target, setup type, and timeframe. The journal computes R-multiple, session bucket, and ATR hit rates automatically.
+
+**5. Review performance**
+
+In the hub, press `d` for the performance dashboard. Breakdowns by setup type, session, timeframe, and planned vs impulsive are shown alongside overall metrics (win rate, profit factor, expectancy, max drawdown).
+
+---
+
+## Configuration
+
+Settings are stored at `~/.financial-engineering/config.json` and can be edited in-app from the settings menu or directly as JSON.
+
+Key settings:
+
+| Setting | Default | Description |
+|---|---|---|
+| `default_symbol` | `MES=F` | Default futures symbol |
+| `default_options_symbol` | `SPY` | Default options symbol |
+| `options_default_t_days` | `30` | Target DTE for option chain resolution |
+| `options_snapshot_ttl_seconds` | `180` | Options snapshot cache TTL |
+| `confluence_tolerance_atr` | `0.25` | ATR multiple for level clustering |
+| `fvg_min_size_atr` | `0.12` | Minimum FVG size relative to ATR |
+| `vol_spike_threshold` | `1.8` | Relative volume multiple for spike flag |
+| `value_area_pct` | `0.70` | Volume profile value area fraction |
+| `db_path` | `~/.financial-engineering/trades.db` | Journal database path |
+
+Watchlists can be edited directly from the Watchlists tab in the hub and saved with `s`.
+
+---
+
+## Limitations
+
+- **Data latency**: all market data comes from yfinance, which has inherent delays and occasional gaps. There is no real-time streaming; data is fetched on demand and on manual refresh.
+- **Options chain quality**: yfinance option chains can have stale quotes, wide spreads during off-hours, or missing strikes. The pipeline applies a soft liquidity filter but degenerate surfaces still occur.
+- **SVI calibration**: SVI fitting can fail for illiquid surfaces or near-expiry chains. The pipeline falls back to raw BS IVs when calibration fails, and calibration status is shown in the Diagnostics tab.
+- **Regime detection**: based on intraday 5m bars from yfinance, period="1d". Intraday data is unavailable outside market hours; regime defaults to UNAVAILABLE.
+- **FRED macro**: requires a free API key. Without it, the Macro tab in both the options workspace and the unified dashboard is unavailable.
+- **Fixed income module**: standalone and not integrated into either TUI workspace. Access the pricing classes directly via Python.
+- **No execution**: Trade Terminal is a read-only analysis tool. Nothing connects to a brokerage or places orders.
+
+---
+
+## Future Improvements
+
+- Real-time data via WebSocket feeds (e.g. Polygon.io, Interactive Brokers) to replace yfinance polling
+- Streaming GEX updates as option chain ticks arrive
+- Options strategy builder integrated directly into the options workspace, connected to the journal planner
+- Deeper fixed income integration: yield curve overlaid in macro tab, treasury curve as rate input selector
+- Backtesting layer for setup-type performance validation against historical data
+- Export to CSV / markdown for journal entries and performance reports
