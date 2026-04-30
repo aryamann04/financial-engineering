@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from analyzer.formatting import format_percent, format_price
 from config.settings import load_settings
+from options.recommender import recommend_strategies
 from options.snapshot import OptionsSnapshot, get_options_snapshot
 
 try:
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
 
 
 _TAB_NAMES = [
-    "overview", "summary", "calls", "puts", "straddle", "gamma", "volume",
+    "overview", "summary", "strategies", "calls", "puts", "straddle", "gamma", "volume",
     "regime", "macro", "surface", "diagnostics", "monitor", "journal",
 ]
 _LOADING = "[dim]Loading…[/dim]"
@@ -271,6 +272,26 @@ def _render_monitor(entries: list["OptionsMonitorEntry"]):
     return table
 
 
+def _render_strategies(recommendations: list[dict]) -> str:
+    from tabulate import tabulate
+
+    if not recommendations:
+        return "[dim]No strategy recommendations available.[/dim]"
+    rows = []
+    for item in recommendations[:8]:
+        rows.append(
+            [
+                item["strategy_name"],
+                item["expiry"],
+                f"{item['final_score']:.1f}",
+                f"{item['model_edge'].get('edge_pct', 0) or 0:.1f}%",
+                format_price(item["max_loss"]) if item["max_loss"] is not None else "Open",
+                item["why_this_strategy"],
+            ]
+        )
+    return "[bold]STRATEGY RECOMMENDATIONS[/bold]\n\n" + tabulate(rows, headers=["Strategy", "Expiry", "Score", "Edge", "Max Loss", "Why"], tablefmt="simple")
+
+
 def _render_journal(db_path: str) -> str:
     from futures.tui import _render_journal as _futures_render_journal
 
@@ -314,12 +335,14 @@ if _TEXTUAL_AVAILABLE:
             self._monitor = []
             self._news_lines: list[str] = []
             self._volume_text = _LOADING
+            self._strategies: list[dict] = []
 
         def compose(self) -> "ComposeResult":
             yield Header(show_clock=True)
-            with TabbedContent("Overview", "Summary", "Calls", "Puts", "Straddle", "Gamma", "Volume", "Regime", "Macro", "Surface", "Diagnostics", "Monitor", "Journal", id="tabs"):
+            with TabbedContent("Overview", "Summary", "Strategies", "Calls", "Puts", "Straddle", "Gamma", "Volume", "Regime", "Macro", "Surface", "Diagnostics", "Monitor", "Journal", id="tabs"):
                 yield TabPane("Overview", Static(_LOADING, id="pane-overview"), id="tab-overview")
                 yield TabPane("Summary", Static(_LOADING, id="pane-summary"), id="tab-summary")
+                yield TabPane("Strategies", Static(_LOADING, id="pane-strategies"), id="tab-strategies")
                 yield TabPane("Calls", DataTable(id="table-calls"), id="tab-calls")
                 yield TabPane("Puts", DataTable(id="table-puts"), id="tab-puts")
                 yield TabPane("Straddle", DataTable(id="table-straddle"), id="tab-straddle")
@@ -339,6 +362,7 @@ if _TEXTUAL_AVAILABLE:
             self._load_snapshot()
             self._load_monitor()
             self._load_analyzer()
+            self._load_strategies()
             self._update_journal()
 
         def _init_tables(self) -> None:
@@ -406,6 +430,14 @@ if _TEXTUAL_AVAILABLE:
             except Exception as exc:
                 self.call_from_thread(self._show_error, str(exc))
 
+        @work(thread=True)
+        def _load_strategies(self) -> None:
+            try:
+                self._strategies = [item.to_dict() for item in recommend_strategies(self.symbol, limit=8)]
+            except Exception:
+                self._strategies = []
+            self.call_from_thread(self._update_strategies)
+
         def _update_overview(self) -> None:
             self.query_one("#pane-overview", Static).update(_render_snapshot(self._snapshot, self._news_lines))
             self.title = f"Options Dashboard — {self.symbol}"
@@ -425,6 +457,9 @@ if _TEXTUAL_AVAILABLE:
             self._volume_text = _volume_analytics_text(a)
             self.query_one("#pane-volume", Static).update(self._volume_text)
 
+        def _update_strategies(self) -> None:
+            self.query_one("#pane-strategies", Static).update(_render_strategies(self._strategies))
+
         def _update_monitor(self) -> None:
             self.query_one("#pane-monitor", Static).update(_render_monitor(self._monitor))
 
@@ -433,7 +468,7 @@ if _TEXTUAL_AVAILABLE:
 
         def _show_error(self, msg: str, only_overview: bool = False) -> None:
             targets = ["#pane-overview"] if only_overview else [
-                "#pane-summary", "#pane-volume", "#pane-regime", "#pane-macro", "#pane-surface", "#pane-diagnostics",
+                "#pane-summary", "#pane-strategies", "#pane-volume", "#pane-regime", "#pane-macro", "#pane-surface", "#pane-diagnostics",
             ]
             for pane_id in targets:
                 self.query_one(pane_id, Static).update(f"[red]Unavailable[/red]\n{msg}")
@@ -454,14 +489,17 @@ if _TEXTUAL_AVAILABLE:
             self.query_one("#pane-overview", Static).update(_LOADING)
             for pane_id in ["#pane-summary", "#pane-volume", "#pane-regime", "#pane-macro", "#pane-surface", "#pane-diagnostics"]:
                 self.query_one(pane_id, Static).update(_LOADING)
+            self.query_one("#pane-strategies", Static).update(_LOADING)
             for table_id in _CHAIN_TABLE_IDS:
                 self.query_one(table_id, DataTable).clear(columns=False)
             self._load_snapshot()
             self._load_analyzer()
+            self._load_strategies()
 
         def action_refresh(self) -> None:
             self._load_snapshot(force_refresh=True)
             self._load_monitor()
+            self._load_strategies()
             self._update_journal()
             if self._analyzer is not None:
                 self._analyzer = None

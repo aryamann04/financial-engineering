@@ -9,3 +9,6 @@ tabulate
 textual>=0.52.0
 rich
 curl_cffi
+python-dotenv
+streamlit
+plotly

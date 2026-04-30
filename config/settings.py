@@ -1,24 +1,53 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field, asdict
+import os
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
+
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - optional dependency in some environments
+    load_dotenv = None
 
 _CONFIG_PATH = Path.home() / ".financial-engineering" / "config.json"
 
 
+def _env_list(name: str, default: list[str]) -> list[str]:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return list(default)
+    return [part.strip() for part in raw.split(",") if part.strip()]
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+def _load_dotenv() -> None:
+    if load_dotenv is not None:
+        load_dotenv()
+
+
 @dataclass
 class Settings:
-    # Watchlist for multi-ticker monitor
-    watchlist: list[str] = field(
-        default_factory=lambda: ["MES=F", "MNQ=F", "MBT=F", "M6E=F"]
-    )
-    futures_watchlist: list[str] = field(
-        default_factory=lambda: ["MES=F", "MNQ=F", "MBT=F", "M6E=F"]
-    )
-    options_watchlist: list[str] = field(
-        default_factory=lambda: ["SPY", "QQQ", "IWM", "AAPL"]
-    )
+    # Watchlists
+    watchlist: list[str] = field(default_factory=lambda: ["MES=F", "MNQ=F", "MBT=F", "M6E=F"])
+    futures_watchlist: list[str] = field(default_factory=lambda: ["MES=F", "MNQ=F", "MBT=F", "M6E=F"])
+    options_watchlist: list[str] = field(default_factory=lambda: ["SPY", "QQQ", "IWM", "AAPL"])
     default_symbol: str = "MES=F"
     default_options_symbol: str = "SPY"
     yfinance_symbols: dict[str, str] = field(default_factory=dict)
@@ -26,46 +55,85 @@ class Settings:
     tick_values: dict[str, float] = field(default_factory=dict)
 
     # Session & data
-    open_range_minutes: int = 30      # NY open range window in minutes
+    open_range_minutes: int = 30
     atr_period: int = 14
     timezone: str = "America/New_York"
     session_windows: dict[str, list[int]] = field(default_factory=dict)
-    default_chart_intervals: list[str] = field(default_factory=lambda: ["5m", "15m", "1h"])
+    default_chart_intervals: list[str] = field(default_factory=lambda: ["1m", "5m", "15m", "1h"])
     options_default_t_days: int = 30
     options_snapshot_ttl_seconds: int = 180
+    default_refresh_seconds: int = 15
+    recent_intraday_days: int = 3
+    intraday_lookback_bars: int = 240
+    data_dir: str = str(Path.home() / ".financial-engineering" / "data")
+
+    # Secrets / integrations
+    fred_api_key: str = ""
+    openai_api_key: str = ""
 
     # Volume profile
     volume_bins: int = 50
-    value_area_pct: float = 0.70      # fraction of volume for value area (0.70 = 70%)
-    vol_spike_threshold: float = 1.8  # relative volume multiple to flag as spike
+    value_area_pct: float = 0.70
+    vol_spike_threshold: float = 1.8
 
     # Confluence & FVG
-    confluence_tolerance_atr: float = 0.25   # levels within this × ATR form a zone
-    fvg_min_size_atr: float = 0.12           # FVGs smaller than this × ATR are ignored
+    confluence_tolerance_atr: float = 0.25
+    fvg_min_size_atr: float = 0.12
 
-    # TUI
-    use_tui: bool = True      # set False to always use simple menu
+    # UI
+    use_tui: bool = True
     color: bool = True
     tui_enabled: bool = True
 
     # Journal
     db_path: str = str(Path.home() / ".financial-engineering" / "trades.db")
 
+    @property
+    def data_path(self) -> Path:
+        path = Path(self.data_dir).expanduser()
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+
+def _apply_json_overrides(settings: Settings) -> Settings:
+    _CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not _CONFIG_PATH.exists():
+        return settings
+
+    try:
+        with open(_CONFIG_PATH) as f:
+            data = json.load(f)
+    except Exception:
+        return settings
+
+    for key, value in data.items():
+        if hasattr(settings, key):
+            setattr(settings, key, value)
+    return settings
+
+
+def _apply_env_overrides(settings: Settings) -> Settings:
+    settings.default_symbol = os.environ.get("DEFAULT_SYMBOL", settings.default_symbol).strip() or settings.default_symbol
+    settings.default_refresh_seconds = _env_int("DEFAULT_REFRESH_SECONDS", settings.default_refresh_seconds)
+    settings.data_dir = os.environ.get("DATA_DIR", settings.data_dir).strip() or settings.data_dir
+    settings.fred_api_key = os.environ.get("FRED_API_KEY", settings.fred_api_key).strip()
+    settings.openai_api_key = os.environ.get("OPENAI_API_KEY", settings.openai_api_key).strip()
+    settings.futures_watchlist = _env_list("FUTURES_WATCHLIST", settings.futures_watchlist)
+    settings.watchlist = list(settings.futures_watchlist)
+    settings.options_watchlist = _env_list("OPTIONS_WATCHLIST", settings.options_watchlist)
+    settings.use_tui = _env_bool("USE_TUI", settings.use_tui)
+    settings.tui_enabled = _env_bool("TUI_ENABLED", settings.tui_enabled)
+    settings.recent_intraday_days = _env_int("RECENT_INTRADAY_DAYS", settings.recent_intraday_days)
+    settings.intraday_lookback_bars = _env_int("INTRADAY_LOOKBACK_BARS", settings.intraday_lookback_bars)
+    return settings
+
 
 def load_settings() -> Settings:
-    _CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    if _CONFIG_PATH.exists():
-        try:
-            with open(_CONFIG_PATH) as f:
-                data = json.load(f)
-            s = Settings()
-            for k, v in data.items():
-                if hasattr(s, k):
-                    setattr(s, k, v)
-            return s
-        except Exception:
-            pass
-    return Settings()
+    _load_dotenv()
+    settings = Settings()
+    settings = _apply_json_overrides(settings)
+    settings = _apply_env_overrides(settings)
+    return settings
 
 
 def save_settings(settings: Settings) -> None:

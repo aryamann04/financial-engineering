@@ -27,6 +27,12 @@ def _bootstrap_project_venv() -> None:
 
 
 def main() -> None:
+    if len(sys.argv) > 1 and sys.argv[1] != "legacy":
+        from interfaces.tui import main as run_trade_terminal
+
+        run_trade_terminal(sys.argv[1:])
+        return
+
     from analyzer.unified import run_unified_analyzer
 
     run_unified_analyzer()
